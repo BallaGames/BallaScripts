@@ -1,11 +1,8 @@
 using Balla.Input;
 using Unity.Netcode;
 using UnityEngine;
-
 namespace Balla.Core
 {
-
-
     /// <summary>
     /// A <see cref="MonoBehaviour"/> that implements <see cref="IBallaMessages"/> (<see cref="IBallaMessages.OnFrame"/>, <see cref="IBallaMessages.AfterFrame"/> and <see cref="IBallaMessages.Timestep"/>).
     /// <br></br>Inheriting this makes it easier to implement other features and neatens code.
