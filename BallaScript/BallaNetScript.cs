@@ -1,6 +1,7 @@
 using Balla.Input;
 using Unity.Netcode;
 using UnityEngine;
+
 namespace Balla.Core
 {
     /// <summary>

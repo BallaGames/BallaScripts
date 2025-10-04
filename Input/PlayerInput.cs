@@ -25,7 +25,7 @@ namespace Balla.Input
         public static PlayerInput InputManager;
 
         internal Vector2 moveInput, lookInput;
-        internal bool jumpInput, crouchInput, sprintInput, interactInput;
+        internal bool jumpInput, crouchInput, sprintInput, interactInput, attackInput;
         public float lookSpeed = 15;
 
         public void Initialised()
@@ -38,6 +38,7 @@ namespace Balla.Input
             SubscribeInput(actions.Player.Interact, GetInteract);
             SubscribeInput(actions.Player.Crouch, GetCrouch);
             SubscribeInput(actions.Player.Sprint, GetSprint);
+            SubscribeInput(actions.Player.Attack, GetAttack);
         }
         public void Terminate()
         {
@@ -46,7 +47,8 @@ namespace Balla.Input
             UnsubscribeInput(actions.Player.Jump , GetJump);
             UnsubscribeInput(actions.Player.Interact , GetInteract);
             UnsubscribeInput(actions.Player.Crouch , GetCrouch);
-            UnsubscribeInput (actions.Player.Sprint , GetSprint);
+            UnsubscribeInput(actions.Player.Sprint, GetSprint);
+            UnsubscribeInput(actions.Player.Attack , GetAttack);
             actions.Disable();
             actions.Dispose();
         }
@@ -110,6 +112,10 @@ namespace Balla.Input
         public void GetSprint(InputAction.CallbackContext ctx)
         {
             sprintInput = ctx.ReadValueAsButton();
+        }
+        public void GetAttack(InputAction.CallbackContext ctx)
+        {
+            attackInput = ctx.ReadValueAsButton();
         }
 
         #endregion

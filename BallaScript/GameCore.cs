@@ -22,7 +22,7 @@ namespace Balla.Core
         public static Frame frame, afterFrame, timestep;
 
         public static float TimeMultiplier = 1f;
-        public static float Delta;
+        public static float Delta = Time.fixedDeltaTime;
         public bool allowManualTimeManip;
         private void OnGUI()
         {
@@ -64,6 +64,7 @@ namespace Balla.Core
             Delta = Time.fixedDeltaTime * TimeMultiplier;
             timestep?.Invoke();
             Physics.Simulate(Delta);
+            Physics2D.Simulate(Delta);
         }
         private void LateUpdate()
         {
