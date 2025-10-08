@@ -439,7 +439,7 @@ namespace Balla.Gameplay.Player
 
         protected void CheckState()
         {
-            isCrouching = IsOwner ? Input.crouchInput : netCrouch;
+            isCrouching = IsOwner ? Input.crouch : netCrouch;
             if(IsOwner && _lastCrouch != isCrouching)
             {
                 SendCrouch_RPC(isCrouching);
@@ -568,11 +568,11 @@ namespace Balla.Gameplay.Player
                 rb.AddForce((dampForward + dampRight) * baseGroundDamping);
 
                 float forceMult = 1;
-                if(Input.moveInput != Vector2.zero)
+                if(Input.move != Vector2.zero)
                 {
                     //Integrate walk/crouch/sprint later
-                    moveRight = Input.moveInput.x * strafeForce * slopeRight;
-                    moveForward = Input.moveInput.y * (Input.moveInput.y > 0 ? forwardForce : backForce) * slopeForward;
+                    moveRight = Input.move.x * strafeForce * slopeRight;
+                    moveForward = Input.move.y * (Input.move.y > 0 ? forwardForce : backForce) * slopeForward;
                     rb.AddForce((moveForward + moveRight) * forceMult);
                 }
 
@@ -596,11 +596,11 @@ namespace Balla.Gameplay.Player
         }
         protected void TryJump()
         {
-            if (isGrounded && currJumpCD >= jumpCooldown && Input.jumpInput)
+            if (isGrounded && currJumpCD >= jumpCooldown && Input.jump)
             {
                 rb.AddForce(transform.up * (jumpSpeed + Mathf.Clamp(rb.linearVelocity.y, -4, 0)), ForceMode.VelocityChange);
                 isGrounded = false;
-                Input.jumpInput = false;
+                Input.jump = false;
                 currJumpCD = 0;
             }
             if(currJumpCD < jumpCooldown)
@@ -622,11 +622,11 @@ namespace Balla.Gameplay.Player
         /// </summary>
         protected void Look()
         {
-            if (Input.lookInput == Vector2.zero)
+            if (Input.look == Vector2.zero)
                 return;
             float oldPitch = pitch;
-            pitch = Mathf.Clamp(pitch + Input.lookInput.y, -89.5f, 89.5f);
-            lookDelta = new(Input.lookInput.x, pitch - oldPitch);
+            pitch = Mathf.Clamp(pitch + Input.look.y, -89.5f, 89.5f);
+            lookDelta = new(Input.look.x, pitch - oldPitch);
             rotationRoot.localRotation *= Quaternion.Euler(0, lookDelta.x, 0);
             aimTransform.localRotation = Quaternion.Euler(-pitch, 0, 0);
         }

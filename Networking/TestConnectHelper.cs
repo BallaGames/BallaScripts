@@ -11,8 +11,8 @@ namespace Lunar
         private void OnGUI()
         {
             GUILayout.BeginVertical();
-            
-            if(!isClient && !isServer)
+
+            if (!isClient && !isServer)
             {
                 if (GUILayout.Button("Start host"))
                 {

@@ -24,8 +24,8 @@ namespace Balla.Input
         /// </summary>
         public static PlayerInput InputManager;
 
-        internal Vector2 moveInput, lookInput;
-        internal bool jumpInput, crouchInput, sprintInput, interactInput, attackInput;
+        internal Vector2 move, look;
+        internal bool jump, crouch, sprint, interact, attack, altAttack, grab;
         public float lookSpeed = 15;
 
         public void Initialised()
@@ -39,7 +39,10 @@ namespace Balla.Input
             SubscribeInput(actions.Player.Crouch, GetCrouch);
             SubscribeInput(actions.Player.Sprint, GetSprint);
             SubscribeInput(actions.Player.Attack, GetAttack);
+            SubscribeInput(actions.Player.AltAttack, GetAltAttack);
+            SubscribeInput(actions.Player.Grab, GetGrab);
         }
+
         public void Terminate()
         {
             UnsubscribeInput(actions.Player.Move, GetMove);
@@ -49,6 +52,9 @@ namespace Balla.Input
             UnsubscribeInput(actions.Player.Crouch , GetCrouch);
             UnsubscribeInput(actions.Player.Sprint, GetSprint);
             UnsubscribeInput(actions.Player.Attack , GetAttack);
+            UnsubscribeInput(actions.Player.AltAttack, GetAltAttack);
+            UnsubscribeInput(actions.Player.Grab, GetGrab);
+
             actions.Disable();
             actions.Dispose();
         }
@@ -90,32 +96,40 @@ namespace Balla.Input
         #region Input Callbacks
         public void GetMove(InputAction.CallbackContext ctx)
         {
-            moveInput = ctx.ReadValue<Vector2>();
+            move = ctx.ReadValue<Vector2>();
         }
         public void GetLook(InputAction.CallbackContext ctx)
         {
             //Look input is multiplied by delta time and lookSpeed when obtained
-            lookInput = GameCore.TimeMultiplier * Time.deltaTime * lookSpeed * ctx.ReadValue<Vector2>();
+            look = GameCore.TimeMultiplier * Time.deltaTime * lookSpeed * ctx.ReadValue<Vector2>();
         }
         public void GetInteract(InputAction.CallbackContext ctx)
         {
-            interactInput = ctx.ReadValueAsButton();
+            interact = ctx.ReadValueAsButton();
         }
         public void GetCrouch(InputAction.CallbackContext ctx)
         {
-            crouchInput = ctx.ReadValueAsButton();
+            crouch = ctx.ReadValueAsButton();
         }
         public void GetJump(InputAction.CallbackContext ctx)
         {
-            jumpInput = ctx.ReadValueAsButton();
+            jump = ctx.ReadValueAsButton();
         }
         public void GetSprint(InputAction.CallbackContext ctx)
         {
-            sprintInput = ctx.ReadValueAsButton();
+            sprint = ctx.ReadValueAsButton();
         }
         public void GetAttack(InputAction.CallbackContext ctx)
         {
-            attackInput = ctx.ReadValueAsButton();
+            attack = ctx.ReadValueAsButton();
+        }
+        public void GetAltAttack(InputAction.CallbackContext ctx)
+        {
+            altAttack = ctx.ReadValueAsButton();
+        }
+        public void GetGrab(InputAction.CallbackContext ctx)
+        {
+            grab = ctx.ReadValueAsButton();
         }
 
         #endregion
