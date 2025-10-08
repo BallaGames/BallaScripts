@@ -1,9 +1,8 @@
 using Balla;
 using UnityEngine;
 using Balla.Core;
-using Balla.Input;
 using System.Collections.Generic;
-using UnityEngine.Networking.PlayerConnection;
+using Unity.Netcode;
 namespace Balla.Gameplay.Player
 {
 
@@ -32,18 +31,22 @@ namespace Balla.Gameplay.Player
     /// <br></br> The Player Controller will handle almost all aspects of motion. It will also provde information for motion behaviours that are not handled by this script.
     /// <br></br> Examples include Ziplines and travelling via portals.
     /// </summary>
-    public class PlayerController : BallaScript, IBallaMessages
+    public class PlayerController : BallaNetScript, IBallaMessages
     {
         [SerializeField] internal Rigidbody rb;
         [SerializeField] internal CapsuleCollider capsule;
 
-        [SerializeField, ReadOnly, Tooltip("Obtained from Camera.Main if this player is the local authority.")] internal Transform cam;
+
+
+        [SerializeField, ReadOnly, Tooltip("Obtained from Camera.Main if this player is the local authority.")] internal Camera cam;
         [SerializeField, Tooltip("Where to move the camera to when updating the player.")] internal Transform camTargetPoint;
         protected Vector3 _camPosOld;
         protected Quaternion _camRotOld;
         public MovementState moveState;
         [SerializeField, Tooltip("The transform moved when the player crouches")] internal Transform crouchTransform;
 
+        bool netCrouch;
+        bool _lastCrouch;
         #region Looking
 
         [SerializeField, Tooltip("The transform used to aim up and down with")] internal Transform aimTransform;
@@ -130,7 +133,7 @@ namespace Balla.Gameplay.Player
         /// <summary>
         /// How crouched the player is. This value moves between 0 and 1 when the player is crouching or uncrouching.
         /// </summary>
-        internal float currentCrouch;
+        [SerializeField, ReadOnly] internal float currentCrouch;
         /// <summary>
         /// The height of the player's head when standing, in local space. Crouching interpolates between this and <see cref="crouchHeadHeight"/>
         /// </summary>
@@ -148,7 +151,7 @@ namespace Balla.Gameplay.Player
         /// How long it takes for the player's head and capsule to lerp towards the target. Higher values here make you crouch slower.
         /// </summary>
         [SerializeField, Tooltip("How long crouching takes.")] protected float crouchTime;
-        protected float crouchIncrement;
+        [SerializeField, ReadOnly] protected float crouchIncrement;
         /// <summary>
         /// How tall the player's capsule is when standing. Try to account for this in the stand height.
         /// </summary>
@@ -244,9 +247,9 @@ namespace Balla.Gameplay.Player
             ConfigureGroundCheckPositions();
 
             //Replace with Owner check later.
-            if (true)
+            if (IsOwner)
             {
-                cam = Camera.main.transform;
+                cam = Camera.main;
             }
         }
 
@@ -278,7 +281,7 @@ namespace Balla.Gameplay.Player
             }
             if(aimTransform != null)
             {
-                standHeadHeight = aimTransform.localPosition.y;
+                standHeadHeight = crouchTransform.localPosition.y;
                 crouchHeadHeight = standHeadHeight - crouchShrinkFactor;
             }
             crouchIncrement = (1 / crouchTime);
@@ -286,6 +289,7 @@ namespace Balla.Gameplay.Player
         void ConfigureGroundCheckPositions()
         {
             groundCheckPositions = new Vector3[groundCheckRays];
+            _maxSpringLength = groundSpringRestLength + groundSpringTravel;
             for (int i = 0; i < groundCheckRays; i++)
             {
                 groundCheckPositions[i] = Quaternion.Euler(0, groundCheckAngle * i, 0) * transform.forward * groundCheckRadius
@@ -305,7 +309,7 @@ namespace Balla.Gameplay.Player
                 for (int i = 0; i < groundCheckRays; i++)
                 {
                     Gizmos.DrawRay(transform.position + (transform.rotation * groundCheckPositions[i]),
-                        Vector3.down * groundCheckDistance);
+                        Vector3.down * (_maxSpringLength + groundPositionOffset));
                 }
             }
         }
@@ -314,21 +318,30 @@ namespace Balla.Gameplay.Player
         #region LunarScript Overrides
         protected override void Timestep()
         {
+            CheckState();
+            Crouch();
+            if (!IsOwner)
+                return;
             if(currJumpCD >= jumpCooldown)
             {
                 CheckGround();
             }
             HandleMotion();
+            
         }
         protected override void AfterFrame()
         {
+            if (!IsOwner)
+                return;
+
             base.AfterFrame();
             Look();
             UpdateCamera();
         }
-
-
         #endregion
+
+
+
         #region Motion
         /// <summary>
         /// This method performs the ground check raycasts and gathers information about the surface they are on.<br></br>
@@ -418,19 +431,26 @@ namespace Balla.Gameplay.Player
         /// </summary>
         protected void HandleMotion()
         {
-            Crouch();
-            Sprint();
+
             CheckMoveState();
             SimpleMove();
             TryJump();
         }
 
-        protected void Sprint()
+        protected void CheckState()
         {
-            isCrouching = Input.crouchInput;
-
+            isCrouching = IsOwner ? Input.crouchInput : netCrouch;
+            if(IsOwner && _lastCrouch != isCrouching)
+            {
+                SendCrouch_RPC(isCrouching);
+                _lastCrouch = isCrouching;
+            }
         }
-
+        [Rpc(SendTo.ClientsAndHost)]
+        public void SendCrouch_RPC(bool state)
+        {
+            netCrouch = state;
+        }
         /// <summary>
         /// Performs a variety of calculations to determine how the player should move when they are on a surface that also moves.
         /// <br></br>This includes rotating with surfaces the player stands on.
@@ -557,12 +577,12 @@ namespace Balla.Gameplay.Player
         {
             //If trying to crouch, we should move towards 1. If trying to stand, we should move towards 0.
             int _crouchtarget = isCrouching ? 1 : 0;
-            if(currentCrouch != (isCrouching ? 1 : 0))
+            if(currentCrouch != _crouchtarget)
             {
                 currentCrouch = Mathf.MoveTowards(currentCrouch, _crouchtarget, crouchIncrement * Delta);
                 capsule.height = Mathf.Lerp(standCapsuleHeight, crouchCapsuleHeight, currentCrouch);
                 capsule.center = Vector3.up * Mathf.Lerp(standCapsulePosition, crouchCapsulePosition, currentCrouch);
-                aimTransform.localPosition = Vector3.up * Mathf.Lerp(standHeadHeight, crouchHeadHeight, currentCrouch);
+                crouchTransform.localPosition = Vector3.up * Mathf.Lerp(standHeadHeight, crouchHeadHeight, currentCrouch);
             }
         }
         protected void TryJump()

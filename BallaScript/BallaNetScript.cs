@@ -25,16 +25,14 @@ namespace Balla.Core
         /// <summary>
         /// A shorthand accessor for the current <see cref="PlayerInput"/> singleton.
         /// </summary>
-
+        internal PlayerInput Input => PlayerInput.InputManager;
 
         void Subscribe()
         {
-            Debug.Log("Subscribed Lunarscript");
             GameCore.Subscribe(this);
         }
         void Unsubscribe()
         {
-            Debug.Log("Unsubscribed Lunarscript");
             GameCore.Unsubscribe(this);
         }
         protected virtual void OnEnable()
@@ -64,7 +62,7 @@ namespace Balla.Core
         /// <summary>
         /// Called every n seconds, determined by Time.FixedTimeStep. Called in-line with Unity's FixedUpdate.
         /// </summary>
-        protected virtual void OnStep()
+        protected virtual void Timestep()
         {
 
         }
@@ -80,7 +78,7 @@ namespace Balla.Core
         }
         void IBallaMessages.Timestep()
         {
-            OnStep();
+            Timestep();
         }
         #endregion
     }
