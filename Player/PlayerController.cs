@@ -406,7 +406,7 @@ namespace Balla.Gameplay.Player
         protected void TransformSurfaceNormal()
         {
             Debug.DrawRay(transform.position, groundNormal, Color.green);
-            slopeForwardFull = Vector3.Cross(transform.right, groundNormal);
+            slopeForwardFull = Vector3.Cross(rotationRoot.right, groundNormal);
             Debug.DrawRay(transform.position, slopeForwardFull, Color.blue);
             slopeRightFull = Vector3.Cross(groundNormal, slopeForwardFull);
             Debug.DrawRay(transform.position, slopeRightFull, Color.red);
@@ -470,6 +470,7 @@ namespace Balla.Gameplay.Player
                 {
                     connectedBody = hit2.rigidbody;
                     connectionLastYaw = connectedBody.rotation.eulerAngles.y;
+                    SetConnectionPosition();
                 }
                 connectedBody = hit2.rigidbody;
             }
@@ -486,11 +487,12 @@ namespace Balla.Gameplay.Player
                 lastConnectedBody = null;
                 return;
             }
+
             Vector3 connectDelta = connectedBody.transform.TransformPoint(connectionLocalPos) - connectionWorldPos;
             connectionVelocity = connectDelta / Delta;
 
-            connectionWorldPos = rb.position;
-            connectionLocalPos = connectedBody.transform.InverseTransformPoint(connectionWorldPos);
+            SetConnectionPosition();
+            
 
             connectionYaw = connectedBody.rotation.eulerAngles.y;
             connectionDeltaYaw = connectionYaw - connectionLastYaw;
@@ -506,6 +508,13 @@ namespace Balla.Gameplay.Player
 
             lastConnectedBody = connectedBody;
         }
+
+        void SetConnectionPosition()
+        {
+            connectionWorldPos = rb.position;
+            connectionLocalPos = connectedBody.transform.InverseTransformPoint(connectionWorldPos);
+        }
+
         /// <summary>
         /// When standing on a rotating surface, the player slowly moves towards the outside edge of the rotating surface.
         /// <br></br>The cause for this is not known. However, I'm going to attempt (very important word) to solve it here.

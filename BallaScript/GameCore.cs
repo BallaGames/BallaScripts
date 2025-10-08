@@ -64,7 +64,7 @@ namespace Balla.Core
             Delta = Time.fixedDeltaTime * TimeMultiplier;
             timestep?.Invoke();
             Physics.Simulate(Delta);
-            Physics2D.Simulate(Delta);
+            //Physics2D.Simulate(Delta);
         }
         private void LateUpdate()
         {
