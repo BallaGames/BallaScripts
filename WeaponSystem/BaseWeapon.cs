@@ -12,6 +12,9 @@ namespace Balla.Equipment
         [SerializeField] protected int ammunition;
         [SerializeField] protected int ammoPerAttack;
 
+
+        protected bool attackInput, altAttackInput;
+
         /// <summary>
         /// Used to find out which trigger should be used for the attack animation.
         /// </summary>
@@ -20,5 +23,8 @@ namespace Balla.Equipment
         {
             triggerName = "null";
         }
+        //Set the inputs for the weapon
+        internal void SetAttackInput(bool input) => attackInput = input;
+        internal void SetAltAttackInput(bool input) => altAttackInput = input;
     }
 }
