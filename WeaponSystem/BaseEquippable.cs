@@ -13,6 +13,12 @@ namespace Balla.Equipment
         //Supplies the gameobject in case its needed.
         public Action<BaseEquippable> equipped, unequipped, used, stopped;
 
+        [SerializeField, ReadOnly] internal EquipmentHolder holder;
+        public virtual void GiveEquippable(EquipmentHolder target)
+        {
+            holder = target;
+        }
+
         public virtual void OnEquip()
         {
             equipped?.Invoke(this);

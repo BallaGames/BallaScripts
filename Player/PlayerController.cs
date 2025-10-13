@@ -335,7 +335,10 @@ namespace Balla.Gameplay.Player
                 return;
 
             base.AfterFrame();
-            Look();
+            if(Input.look != Vector2.zero)
+            {
+                Look();
+            }
             UpdateCamera();
         }
         #endregion
@@ -622,8 +625,7 @@ namespace Balla.Gameplay.Player
         /// </summary>
         protected void Look()
         {
-            if (Input.look == Vector2.zero)
-                return;
+            
             float oldPitch = pitch;
             pitch = Mathf.Clamp(pitch + Input.look.y, -89.5f, 89.5f);
             lookDelta = new(Input.look.x, pitch - oldPitch);
@@ -632,26 +634,7 @@ namespace Balla.Gameplay.Player
         }
         protected void UpdateCamera()
         {
-            bool posUpdate = _camPosOld != camTargetPoint.position;
-            bool rotUpdate = _camRotOld != camTargetPoint.rotation;
-            
-            if(posUpdate && rotUpdate)
-            {
-                cam.transform.SetPositionAndRotation(camTargetPoint.position, camTargetPoint.rotation);
-            }
-            else
-            {
-                if (posUpdate)
-                {
-                    cam.transform.position = camTargetPoint.position;
-                }
-                if (rotUpdate)
-                {
-                    cam.transform.rotation = camTargetPoint.rotation;
-                }
-            }
-            _camPosOld = camTargetPoint.position;
-            _camRotOld = camTargetPoint.rotation;
+            cam.transform.SetPositionAndRotation(camTargetPoint.position, camTargetPoint.rotation);
         }
         #endregion Non-motion
     }
