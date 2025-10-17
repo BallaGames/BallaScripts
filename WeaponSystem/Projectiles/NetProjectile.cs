@@ -5,6 +5,7 @@ using Unity.Mathematics;
 using Unity.Netcode;
 using Unity.Netcode.Components;
 using UnityEngine;
+using UnityEngine.VFX;
 
 namespace Balla.Projectile
 {
@@ -13,6 +14,12 @@ namespace Balla.Projectile
 
         internal ulong owner;
         [SerializeField] internal bool alive;
+        
+        [SerializeField] internal VisualEffect vfx;
+        [SerializeField] internal MeshFilter meshFilter;
+        [SerializeField] internal MeshRenderer meshRenderer;
+        [SerializeField] internal NetworkTransform networkTransform;
+
         internal float LifeLerp => Mathf.InverseLerp(0, maxLife, currLife);
         [SerializeField] internal float maxLife, currLife;
         internal Vector3 velocity;
@@ -20,88 +27,103 @@ namespace Balla.Projectile
         internal float speed;
         internal Vector3 gravity;
         internal int bounces;
-        [SerializeField] protected Renderer r;
         internal Vector3 targetPos;
-        internal ProjectileData data;
-        internal ushort ID = 0;
+        [SerializeField] protected Renderer r;
+        [SerializeField] internal ProjectileData data;
+        internal int globalID = 0, poolID = 0;
+        public static int NextGlobalID;
 
-        public static Dictionary<ushort, NetProjectile> ProjectileIDs;
+        public static Dictionary<int, NetProjectile> GlobalIDs;
 
-        public static void SetProjectilePosition(ushort ID, Vector3 pos)
+        protected override void OnEnable()
         {
-            if (ProjectileIDs.ContainsKey(ID))
-                ProjectileIDs[ID].ReceiveNewPosition(pos);
-            else
-                Debug.Log("Failed to get Projectile from ID");
+            
         }
-
-        public void ReceiveNewPosition(Vector3 pos)
+        protected override void OnDisable()
         {
-            targetPos = pos;
+            
         }
         protected override void Timestep()
         {
-            transform.position = Vector3.MoveTowards(transform.position, targetPos, ProjectileManager.Instance.projectileLerpSpeed * Delta);
-            if (!IsServer)
+            if (alive)
             {
-                currLife += Delta;
-                if (LifeLerp >= 1 && alive)
-                {
-                    Terminate();
-                }
+                transform.forward = targetPos - transform.position;
+                if(IsServer)
+                    transform.position = Vector3.MoveTowards(transform.position, targetPos, ProjectileManager.Instance.projectileLerpSpeed * Delta);
             }
         }
         public override void OnNetworkSpawn()
         {
             base.OnNetworkSpawn();
-            ProjectileIDs ??= new Dictionary<ushort, NetProjectile>();
+            GlobalIDs ??= new Dictionary<int, NetProjectile>();
 
-            r.enabled = false;
-            if(ProjectileIDs.TryAdd(ID, this))
+            if(GlobalIDs.TryAdd(NextGlobalID, this))
             {
-                ID++;
+                globalID = NextGlobalID;
+                NextGlobalID++;
             }
+            r.enabled = false;
         }
-        internal void InitialiseOnServer(Vector3 simPos, Vector3 startPos, Vector3 forward, ulong entity, int dataIndex)
+        /// <summary>
+        /// Prepares the projectile for simulation on the server.
+        /// </summary>
+        /// <param name="simPos"></param>
+        /// <param name="startPos"></param>
+        /// <param name="forward"></param>
+        /// <param name="entity"></param>
+        /// <param name="dataIndex"></param>
+        internal void SimSetup(Vector3 simPos, Vector3 startPos, Vector3 forward, ulong entity)
         {
             owner = entity;
             alive = true;
             currLife = 0;
-            ProjectileData data = ProjectileManager.Instance.projectileData[dataIndex];
-            this.data = data;
             maxLife = data.maxLifetime;
             velocity = forward * data.projectileSpeed;
             gravity = Physics.gravity * data.gravityMultiplier;
-
             bounces = data.maxBounces;
-
             //Remember to initialise both the current position AND target position to the place we fire from.
             transform.position = startPos;
             targetPos = simPos;
-            r.enabled = true;
+            GameCore.Subscribe(this);
         }
         [Rpc(SendTo.ClientsAndHost)]
-        internal void Initialise_RPC(Vector3 pos, ulong entity, int dataIndex)
+        internal void Initialise_RPC(Vector3 startPos)
         {
-            transform.position = pos;
             r.enabled = true;
-            owner = entity;
+            if (vfx != null)
+            {
+                vfx.Play();
+            }
             alive = true;
-            currLife = 0;
-            ProjectileData data = ProjectileManager.Instance.projectileData[dataIndex];
-            this.data = data;
-            maxLife = data.maxLifetime;
-            targetPos = pos;
+            targetPos = startPos;
+            transform.position = startPos;
+
+
         }
 
         public void Terminate()
         {
             alive = false;
-            r.enabled = false;
             if (IsServer)
             {
-                ProjectileManager.ActiveProjectiles--;
+                ProjectileManager.activeCount--;
             }
+            if(vfx != null)
+            {
+                vfx.Stop();
+            }
+            r.enabled = false;
+            Debug.Log("terminated projectile @ " + Time.time);
+            GameCore.Unsubscribe(this);
+            if(IsServer)
+            {
+                SendTerminateToClient_RPC();
+            }
+        }
+        [Rpc(SendTo.NotServer)]
+        public void SendTerminateToClient_RPC()
+        {
+            Terminate();
         }
 
     }

@@ -337,7 +337,7 @@ namespace Balla.Gameplay.Player
             base.AfterFrame();
             if(Input.look != Vector2.zero)
             {
-                Look();
+                RotatePlayer();
             }
             UpdateCamera();
         }
@@ -623,7 +623,7 @@ namespace Balla.Gameplay.Player
         /// <br></br>Both players AND servers will have control over their rotation, by allowing the player to rotate a child transform.
         /// <br></br>When sending move inputs, players will also send their current rotation to ensure the server has the most up-to-date information.
         /// </summary>
-        protected void Look()
+        protected void RotatePlayer()
         {
             
             float oldPitch = pitch;

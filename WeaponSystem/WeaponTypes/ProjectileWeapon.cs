@@ -31,7 +31,7 @@ namespace Balla.Equipment
         [SerializeField] protected bool muzzleWhenFiring;
         [SerializeField, ReadOnly] protected bool playingMuzzle;
         [SerializeField] internal ProjectileData projectileData;
-        internal int projDataIndex = -1;
+        internal int dataIndex = -1;
         public VisualEffect muzzleEffect;
 
         protected virtual void Initialise(bool spawned)
@@ -69,7 +69,7 @@ namespace Balla.Equipment
             {
                 if(playingMuzzle != s_attackInput)
                 {
-                    if (s_attackInput)
+                    if (s_attackInput && CanFire)
                     {
                         muzzleEffect.Play();
                     }
@@ -81,10 +81,8 @@ namespace Balla.Equipment
                 }
             }
             CycleLogic();
-            if (!canAutoFire)
-            {
-                fired = !s_attackInput;
-            }
+            if (!s_attackInput)
+                fired = false;
         }
         protected virtual void CycleLogic()
         {
@@ -108,9 +106,9 @@ namespace Balla.Equipment
         {
             if (IsServer)
             {
-                if (projDataIndex == -1)
+                if (dataIndex == -1)
                 {
-                    projDataIndex = ProjectileManager.Instance.projectileData.IndexOf(projectileData);
+                    dataIndex = ProjectileManager.Instance.projectileData.IndexOf(projectileData);
                 }
                 FireOnServer(ProjectileManager.FireFromMuzzle ? muzzle.position : holder.firearmShootPoint.position, holder.firearmShootPoint.forward, NetworkManager.LocalTime.Time);
             }
