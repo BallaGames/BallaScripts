@@ -26,19 +26,5 @@ namespace Balla
         public float bounciness;
         public bool explodeOnExpire;
         public ExplosionData explosionData;
-
-
-        public VisualEffectAsset vfxAsset;
-        public Mesh projectileMesh;
-        public Material meshMaterial;
-        public Vector3 meshScale, meshPos, meshRotation;
-        
-
-
-
-
-
-
-
     }
 }

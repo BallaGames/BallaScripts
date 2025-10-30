@@ -5,15 +5,49 @@ namespace Balla.Equipment
 {
     public class PlayerEquipment : EquipmentHolder
     {
-        public BaseWeapon weapon;
+        public BaseWeapon CurrentWeapon => weapons[weaponIndex];
+        public int weaponIndex;
+        public BaseWeapon[] weapons;
+
+        public override void OnNetworkSpawn()
+        {
+            base.OnNetworkSpawn();
+            Input.SubscribeToActionPerform(Input.actions.Player.Next, NextWeapon);
+            Input.SubscribeToActionPerform(Input.actions.Player.Previous, PreviousWeapon);
+
+        }
+        void PreviousWeapon()
+        {
+            SwitchWeapons(false);
+        }
+        void NextWeapon()
+        {
+            SwitchWeapons(true);
+        }
+        void SwitchWeapons(bool next)
+        {
+            if(weapons.Length <= 1)
+            {
+                //we have one or less weapons, so we shouldn't try to switch. back out early.
+                return;
+            }
+            //Set the weapon's inputs to false
+            var oldWeapon = CurrentWeapon;
+            //Increment/Decrement the weapon index and then mod it to prevent it going out of bounds
+            weaponIndex += next ? 1 : -1;
+            weaponIndex %= weapons.Length;
+            //Then call our select and deselect methods.
+            oldWeapon.OnDeselect(CurrentWeapon);
+            CurrentWeapon.OnSelect(oldWeapon);
+        }
 
         protected override void Timestep()
         {
-            
-            if(weapon != null)
+           
+            if(CurrentWeapon != null)
             {
-                weapon.SetAttackInput(Input.attack);
-                weapon.SetAltAttackInput(Input.altAttack);
+                CurrentWeapon.SetAttackInput(Input.attack);
+                CurrentWeapon.SetAltAttackInput(Input.altAttack);
             }
         }
     }

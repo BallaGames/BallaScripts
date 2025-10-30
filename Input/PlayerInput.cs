@@ -25,9 +25,16 @@ namespace Balla.Input
         public static PlayerInput InputManager;
 
         internal Vector2 move, look;
-        internal bool jump, crouch, sprint, interact, attack, altAttack, grab;
+        internal bool jump, crouch, sprint, interact, attack, altAttack, grab, prevEquip, nextEquip;
         public float lookSpeed = 15;
-
+        public void SubscribeToActionPerform(InputAction action, Action target)
+        {
+            action.performed += (ctx) => target?.Invoke();
+        }
+        public void UnsubscribeFromActionPerform(InputAction action, Action target)
+        {
+            action.performed -= (ctx) => target?.Invoke();
+        }
         public void Initialised()
         {
             actions = new CS_Actions();
@@ -41,6 +48,8 @@ namespace Balla.Input
             SubscribeInput(actions.Player.Attack, GetAttack);
             SubscribeInput(actions.Player.AltAttack, GetAltAttack);
             SubscribeInput(actions.Player.Grab, GetGrab);
+            SubscribeInput(actions.Player.Next, GetNextEquip);
+            SubscribeInput(actions.Player.Previous, GetPrevEquip);
         }
 
         public void Terminate()
@@ -54,7 +63,8 @@ namespace Balla.Input
             UnsubscribeInput(actions.Player.Attack , GetAttack);
             UnsubscribeInput(actions.Player.AltAttack, GetAltAttack);
             UnsubscribeInput(actions.Player.Grab, GetGrab);
-
+            UnsubscribeInput(actions.Player.Next , GetNextEquip);
+            UnsubscribeInput(actions.Player.Previous, GetPrevEquip);
             actions.Disable();
             actions.Dispose();
         }
@@ -131,7 +141,14 @@ namespace Balla.Input
         {
             grab = ctx.ReadValueAsButton();
         }
-
+        void GetNextEquip(InputAction.CallbackContext ctx)
+        {
+            nextEquip = ctx.ReadValueAsButton();
+        }
+        void GetPrevEquip(InputAction.CallbackContext ctx)
+        {
+            prevEquip = ctx.ReadValueAsButton();
+        }
         #endregion
     }
 }
