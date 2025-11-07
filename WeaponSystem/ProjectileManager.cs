@@ -1,5 +1,6 @@
 using Balla.Entity;
 using Balla.Equipment;
+using Balla.Gameplay;
 using Balla.Projectile;
 using System.Collections;
 using System.Collections.Generic;
@@ -67,6 +68,9 @@ namespace Balla.Core
         }
         public static List<NetProjectile> syncProjectiles;
         #endregion
+
+        
+
 
         private void Awake()
         {
@@ -211,8 +215,7 @@ namespace Balla.Core
                         {
                             //And if we hit something with a rigidbody, we should check its entity
                             //If the entity is NOT the entities[x] (this projectile's entity) then we can hit it.
-                            //Force recompile now
-                            if(hit.rigidbody.TryGetComponent(out BaseEntity ent) && ent != entities[index])
+                            if (QueryHelper.GetEntity(hit.rigidbody, out BaseEntity ent) && ent != entities[index])
                             {
                                 ProjectileHit(proj, hit, ent);
                             }

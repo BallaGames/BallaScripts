@@ -14,7 +14,7 @@ namespace Balla.Equipment
             base.OnNetworkSpawn();
             Input.SubscribeToActionPerform(Input.actions.Player.Next, NextWeapon);
             Input.SubscribeToActionPerform(Input.actions.Player.Previous, PreviousWeapon);
-
+            weapons ??= new BaseWeapon[4];
         }
         void PreviousWeapon()
         {

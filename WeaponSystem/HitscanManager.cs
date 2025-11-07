@@ -13,6 +13,11 @@ namespace Balla.Gameplay
     public class HitscanManager : BallaNetScript
     {
         public static HitscanManager Instance { get; private set; }
+
+        public LayerMask hitscanMask;
+        public int hitsPerRay = 16;
+
+
         public override void OnNetworkSpawn()
         {
             base.OnNetworkSpawn();
@@ -20,7 +25,6 @@ namespace Balla.Gameplay
             if(Instance == null)
             {
                 Instance = this;
-
             }
             else
             {
