@@ -52,9 +52,9 @@ namespace Balla.Equipment
 
             roundsPerMinute = Mathf.Clamp(roundsPerMinute, 0, 3000);
             timeBetweenRounds = 1f / (roundsPerMinute / 60f);
+            fireTimeIncrement = timeBetweenRounds * Time.fixedDeltaTime;
 
         }
-
         /// <summary>
         /// Runs some logic before shooting and then shoots the weapon.
         /// Effects and audio should be played here on the local client.

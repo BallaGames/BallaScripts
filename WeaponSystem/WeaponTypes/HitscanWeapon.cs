@@ -8,5 +8,10 @@ namespace Balla.Equipment
         {
             base.Fire(pos, dir);
         }
+        protected override void PreFire()
+        {
+            base.PreFire();
+            PostFire();
+        }
     }
 }

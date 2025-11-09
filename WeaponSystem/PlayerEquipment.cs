@@ -15,6 +15,16 @@ namespace Balla.Equipment
             Input.SubscribeToActionPerform(Input.actions.Player.Next, NextWeapon);
             Input.SubscribeToActionPerform(Input.actions.Player.Previous, PreviousWeapon);
             weapons ??= new BaseWeapon[4];
+            for (int i = 0; i < weapons.Length; i++)
+            {
+                if (weapons[i] != null)
+                {
+                    if (i == 0)
+                        weapons[i].OnSelect(null);
+                    else
+                        weapons[i].OnDeselect(null);
+                }
+            }
         }
         void PreviousWeapon()
         {
@@ -35,10 +45,12 @@ namespace Balla.Equipment
             var oldWeapon = CurrentWeapon;
             //Increment/Decrement the weapon index and then mod it to prevent it going out of bounds
             weaponIndex += next ? 1 : -1;
-            weaponIndex %= weapons.Length;
+            weaponIndex = (int)Mathf.Repeat(weaponIndex, weapons.Length);
             //Then call our select and deselect methods.
             oldWeapon.OnDeselect(CurrentWeapon);
             CurrentWeapon.OnSelect(oldWeapon);
+            oldWeapon.OnUnequip();
+            CurrentWeapon.OnEquip();
         }
 
         protected override void Timestep()

@@ -11,6 +11,30 @@ namespace Balla.Equipment
         /// </summary>
         public Action<BaseUseable, BaseUseable> selectedUseable;
 
+        public Renderer[] renderers;
+        public void Show(bool show)
+        {
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                renderers[i].enabled = show;
+            }
+        }
+
+        public override void OnNetworkSpawn()
+        {
+            base.OnNetworkSpawn();
+            if (IsOwner)
+            {
+                for (int i = 0;i < renderers.Length; i++)
+                {
+                    if (renderers[i] != null)
+                    {
+                        renderers[i].gameObject.layer = 8;
+                    }
+                }
+            }
+        }
+
         /// <summary>
         /// Called when switching TO this weapon
         /// </summary>

@@ -33,10 +33,12 @@ namespace Balla.Equipment
         public override void OnSelect(BaseUseable previous)
         {
             base.OnSelect(previous);
+            Show(true);
         }
         public override void OnDeselect(BaseUseable next)
         {
             base.OnDeselect(next);
+            Show(false);
         }
 
         //Set the inputs for the weapon
@@ -59,6 +61,10 @@ namespace Balla.Equipment
         protected virtual void Initialise(bool spawned)
         {
 
+        }
+        private void OnValidate()
+        {
+            Initialise(false);
         }
     }
 }
