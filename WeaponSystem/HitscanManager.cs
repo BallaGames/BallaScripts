@@ -10,19 +10,15 @@ namespace Balla.Gameplay
     /// * Multithread raycasts 
     /// * Eliminate situations where both players shoot at the same time, but only one actually logs their hit.
     /// </summary>
-    public class HitscanManager : BallaNetScript
+    public class HitscanManager : BallaScript
     {
         public static HitscanManager Instance { get; private set; }
 
         public LayerMask hitscanMask;
         public int hitsPerRay = 16;
-
-
-        public override void OnNetworkSpawn()
+        private void Awake()
         {
-            base.OnNetworkSpawn();
-
-            if(Instance == null)
+            if (Instance == null)
             {
                 Instance = this;
             }

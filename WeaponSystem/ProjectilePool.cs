@@ -80,7 +80,6 @@ namespace Balla.Core
                 projectilesSpawned[i] = Object.Instantiate(data.projectilePrefab, Vector3.zero, Quaternion.identity);
                 projectilesSpawned[i].poolID = nextProjectileID;
                 nextProjectileID++;
-                projectilesSpawned[i].NetworkObject.Spawn();
             }
             Projectiles.AddRange(projectilesSpawned);
         }
@@ -97,7 +96,6 @@ namespace Balla.Core
             for (int i = 0; i < ps.Length; i++)
             {
                 nextProjectileID++;
-                ps[i].NetworkObject.Spawn();
                 ps[i].poolID = nextProjectileID;
             }
             Projectiles = new(ps);

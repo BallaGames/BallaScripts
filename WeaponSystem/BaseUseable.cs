@@ -19,18 +19,15 @@ namespace Balla.Equipment
                 renderers[i].enabled = show;
             }
         }
+        
 
-        public override void OnNetworkSpawn()
+        protected override void Init()
         {
-            base.OnNetworkSpawn();
-            if (IsOwner)
+            for (int i = 0;i < renderers.Length; i++)
             {
-                for (int i = 0;i < renderers.Length; i++)
+                if (renderers[i] != null)
                 {
-                    if (renderers[i] != null)
-                    {
-                        renderers[i].gameObject.layer = 8;
-                    }
+                    renderers[i].gameObject.layer = 8;
                 }
             }
         }

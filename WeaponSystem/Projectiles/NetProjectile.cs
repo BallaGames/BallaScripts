@@ -1,15 +1,11 @@
 using Balla.Core;
-using Balla.Entity;
 using System.Collections.Generic;
-using Unity.Mathematics;
-using Unity.Netcode;
-using Unity.Netcode.Components;
 using UnityEngine;
 using UnityEngine.VFX;
 
 namespace Balla.Projectile
 {
-    public class NetProjectile : BallaNetScript
+    public class NetProjectile : BallaScript
     {
 
         internal ulong owner;
@@ -18,7 +14,6 @@ namespace Balla.Projectile
         [SerializeField] internal VisualEffect vfx;
         [SerializeField] internal MeshFilter meshFilter;
         [SerializeField] internal MeshRenderer meshRenderer;
-        [SerializeField] internal NetworkTransform networkTransform;
 
         internal float LifeLerp => Mathf.InverseLerp(0, maxLife, currLife);
         [SerializeField] internal float maxLife, currLife;
@@ -48,16 +43,14 @@ namespace Balla.Projectile
             if (alive)
             {
                 transform.forward = targetPos - transform.position;
-                if(IsServer)
-                    transform.position = Vector3.MoveTowards(transform.position, targetPos, ProjectileManager.Instance.projectileLerpSpeed * Delta);
+                transform.position = Vector3.MoveTowards(transform.position, targetPos, ProjectileManager.Instance.projectileLerpSpeed * Delta);
             }
         }
-        public override void OnNetworkSpawn()
+        private void Awake()
         {
-            base.OnNetworkSpawn();
             GlobalIDs ??= new Dictionary<int, NetProjectile>();
 
-            if(GlobalIDs.TryAdd(NextGlobalID, this))
+            if (GlobalIDs.TryAdd(NextGlobalID, this))
             {
                 globalID = NextGlobalID;
                 NextGlobalID++;
@@ -85,29 +78,18 @@ namespace Balla.Projectile
             transform.position = startPos;
             targetPos = simPos;
             GameCore.Subscribe(this);
-        }
-        [Rpc(SendTo.ClientsAndHost)]
-        internal void Initialise_RPC(Vector3 startPos)
-        {
             r.enabled = true;
             if (vfx != null)
             {
                 vfx.Play();
             }
             alive = true;
-            targetPos = startPos;
-            transform.position = startPos;
-
-
         }
 
         public void Terminate()
         {
             alive = false;
-            if (IsServer)
-            {
-                ProjectileManager.activeCount--;
-            }
+            ProjectileManager.activeCount--;
             if(vfx != null)
             {
                 vfx.Stop();
@@ -115,16 +97,6 @@ namespace Balla.Projectile
             r.enabled = false;
             Debug.Log("terminated projectile @ " + Time.time);
             GameCore.Unsubscribe(this);
-            if(IsServer)
-            {
-                SendTerminateToClient_RPC();
-            }
         }
-        [Rpc(SendTo.NotServer)]
-        public void SendTerminateToClient_RPC()
-        {
-            Terminate();
-        }
-
     }
 }

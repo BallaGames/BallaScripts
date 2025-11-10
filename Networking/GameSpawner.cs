@@ -1,4 +1,3 @@
-using Unity.Netcode;
 using UnityEngine;
 
 namespace Balla
@@ -8,21 +7,13 @@ namespace Balla
     /// </summary>
     public class GameSpawner : MonoBehaviour
     {
-        public NetworkObject[] objectsToSpawn;
+        public GameObject[] objectsToSpawn;
 
-        private void Start()
+        public void GameStarted()
         {
-            NetworkManager.Singleton.OnClientStarted += ConnectionStarted;
-        }
-
-        private void ConnectionStarted()
-        {
-            if (!NetworkManager.Singleton.IsServer)
-                return;
-
             for (int i = 0; i < objectsToSpawn.Length; i++)
             {
-                NetworkManager.Singleton.SpawnManager.InstantiateAndSpawn(objectsToSpawn[i]);
+                Instantiate(objectsToSpawn[i]);
             }
         }
     }

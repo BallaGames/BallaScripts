@@ -9,9 +9,8 @@ namespace Balla.Equipment
         public int weaponIndex;
         public BaseWeapon[] weapons;
 
-        public override void OnNetworkSpawn()
+        protected override void Initialise()
         {
-            base.OnNetworkSpawn();
             Input.SubscribeToActionPerform(Input.actions.Player.Next, NextWeapon);
             Input.SubscribeToActionPerform(Input.actions.Player.Previous, PreviousWeapon);
             weapons ??= new BaseWeapon[4];

@@ -2,12 +2,11 @@ using Balla.Core;
 using Balla.Entity;
 using RootMotion.FinalIK;
 using System.Collections.Generic;
-using Unity.Netcode;
 using UnityEngine;
 
 namespace Balla.Core
 {
-    public class ExplosionManager : BallaNetScript
+    public class ExplosionManager : BallaScript
     {
         public static ExplosionManager Instance {  get; private set; }
         public List<ExplosionData> explosions;
@@ -16,9 +15,9 @@ namespace Balla.Core
         public LayerMask obstructMask;
         public int maxOverlaps = 16;
 
-        public override void OnNetworkSpawn()
+        private void Awake()
         {
-            if(Instance == null)
+            if (Instance == null)
             {
                 Instance = this;
             }
@@ -28,12 +27,11 @@ namespace Balla.Core
             }
 
 
-                explosionDict = new();
+            explosionDict = new();
             for (int i = 0; i < explosions.Count; i++)
             {
                 explosionDict.TryAdd(explosions[i], new Explosion(explosions[i], 10));
             }
-            base.OnNetworkSpawn();
         }
 
         /// <summary>
@@ -44,7 +42,7 @@ namespace Balla.Core
         /// <param name="sourceEntityID"></param>
         public void Explode(ExplosionData expType, Vector3 position, Vector3 rotation, ulong sourceEntityID)
         {
-            SendExplosion_RPC(explosions.IndexOf(expType), position, Quaternion.Euler(rotation));
+            SpawnExplosionEffect(explosions.IndexOf(expType), position, Quaternion.Euler(rotation));
             Collider[] cols = new Collider[maxOverlaps];
             int hits = Physics.OverlapSphereNonAlloc(position, expType.radius, cols, checkMask, QueryTriggerInteraction.Ignore);
             Debug.Log($"{hits} objects hit by explosion");
@@ -101,8 +99,7 @@ namespace Balla.Core
                 }
             }
         }
-        [Rpc(SendTo.ClientsAndHost)]
-        public void SendExplosion_RPC(int explosionIndex, Vector3 pos, Quaternion rot)
+        public void SpawnExplosionEffect(int explosionIndex, Vector3 pos, Quaternion rot)
         {
             explosionDict[explosions[explosionIndex]].GetExplosion(pos, rot);
         }

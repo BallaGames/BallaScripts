@@ -1,9 +1,5 @@
 using Balla.Core;
-using Balla.Projectile;
-using System.Collections.Generic;
-using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.VFX;
 
 namespace Balla.Equipment
 {
@@ -23,21 +19,18 @@ namespace Balla.Equipment
         }
         protected override void PreFire()
         {
-            if (IsServer)
+            if (dataIndex == -1)
             {
-                if (dataIndex == -1)
-                {
-                    dataIndex = ProjectileManager.Instance.projectileData.IndexOf(projectileData);
-                }
-                FireOnServer(ProjectileManager.FireFromMuzzle ? muzzle.position : holder.firearmShootPoint.position, holder.firearmShootPoint.forward, NetworkManager.LocalTime.Time);
+                dataIndex = ProjectileManager.Instance.projectileData.IndexOf(projectileData);
             }
+            FireSimulation(ProjectileManager.FireFromMuzzle ? muzzle.position : holder.firearmShootPoint.position, holder.firearmShootPoint.forward);
             PostFire();
         }
 
         private void OnValidate()
         {
             //Clamp to upper limit of 3000, after which the time between rounds is less than fixed delta time.
-            Initialise(false);
+            InitialiseWeapon(false);
         }
     }
 }

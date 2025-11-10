@@ -6,7 +6,6 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Jobs.LowLevel.Unsafe;
-using Unity.Netcode;
 using UnityEngine;
 
 namespace Balla.Core
@@ -19,7 +18,7 @@ namespace Balla.Core
     /// <br>The Firearm Manager also gives firearms access to the global projectile pool. Whilst not every weapon will use projectiles, those that do will benefit from this. </br>
     /// <br>It is advised to use hitscan for weapons that would have a much faster projectile, since the projectile process is more performance and bandwidth-intensive.</br>
     /// </summary>
-    public class ProjectileManager : BallaNetScript
+    public class ProjectileManager : BallaScript
     {
         public static List<ProjectilePool> pools;
         public static ProjectileManager Instance { get; private set; }
@@ -49,8 +48,10 @@ namespace Balla.Core
         {
             if (syncProjectiles == null)
             {
-                syncProjectiles = new(new SizeCollection<NetProjectile>(1000));
-                syncProjectiles[0] = proj;
+                syncProjectiles = new(new SizeCollection<NetProjectile>(1000))
+                {
+                    [0] = proj
+                };
                 Debug.Log($"Created new projectile list with count {syncProjectiles.Count}");
             }
             else
@@ -85,7 +86,7 @@ namespace Balla.Core
                     Debug.Log($"creating pool at index {i}");
                     pools.Add(new(projectileData[i], startProjectiles));
                 }
-
+                CreateStartProjectiles();
             }
             else
             {
@@ -94,26 +95,6 @@ namespace Balla.Core
             }
         }
         long _t;
-        public override void OnNetworkSpawn()
-        {
-            base.OnNetworkSpawn();
-            if (Instance == null)
-            {
-                Instance = this;
-            }
-            if (IsServer)
-            {
-                //The host needs to run the sync logic too, so we'll wrap it in an if-else on IsServer.
-                CreateStartProjectiles();
-                //StartCoroutine(SendProjectileSync());
-            }
-            else
-            {
-                //But if we're a non-host client, we want to GET all the projectiles in the scene.
-                //We can probably do this quite easily on the projectiles themselves.
-                //But we'll leave this here for future reference.
-            }
-        }
 
         void CreateStartProjectiles()
         {
@@ -125,9 +106,6 @@ namespace Balla.Core
 
         protected override void Timestep()
         {
-            if (!IsServer)
-                return;
-
             if (syncProjectiles == null)
             {
                 return;
@@ -147,9 +125,7 @@ namespace Balla.Core
             NetProjectile proj = pools[w.dataIndex].GetSingleProjectile();
             Vector3 pos = fireFromMuzzle ? w.MuzzlePoint : w.holder.firearmShootPoint.position;
             Vector3 dir = w.holder.firearmShootPoint.forward;
-            proj.networkTransform.Teleport(pos, Quaternion.identity, Vector3.one);
             proj.SimSetup(pos, w.MuzzlePoint, dir, w.holder.entity.entityID);
-            proj.Initialise_RPC(w.MuzzlePoint);
             activeCount++;
             return proj;
         }
@@ -188,8 +164,6 @@ namespace Balla.Core
 
             var handle = SpherecastCommand.ScheduleBatch(commands, hits, (int)Mathf.Max(activeCount / JobsUtility.JobWorkerCount, 1), maxHits);
             handle.Complete();
-
-            bool didHit = false;
             index = 0;
             for (int x = 0; x < 1000; x++)
             {
@@ -198,7 +172,7 @@ namespace Balla.Core
                 if (proj == null)
                     continue;
                 //The max number of hits we allow.
-                didHit = false;
+                bool didHit = false;
                 int offset = index * maxHits;
                 for (int y = 0; y < maxHits; y++)
                 {

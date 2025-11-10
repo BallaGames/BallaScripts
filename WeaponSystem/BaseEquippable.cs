@@ -7,7 +7,7 @@ namespace Balla.Equipment
     /// <summary>
     /// Base class for anything that can be equipped to the player.
     /// </summary>
-    public abstract class BaseEquippable : BallaNetScript
+    public abstract class BaseEquippable : BallaScript
     {
         //Actions for various things that can be subscribed to.
         //Supplies the gameobject in case its needed.
@@ -34,6 +34,10 @@ namespace Balla.Equipment
         public virtual void OnStop()
         {
             stopped?.Invoke(this);
+        }
+        protected virtual void Init()
+        {
+
         }
     }
 }

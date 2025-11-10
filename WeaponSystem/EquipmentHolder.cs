@@ -4,15 +4,14 @@ using UnityEngine;
 
 namespace Balla.Equipment
 {
-    public class EquipmentHolder : BallaNetScript
+    public class EquipmentHolder : BallaScript
     {
         [SerializeField] internal BaseEntity entity;
         [SerializeField] internal Transform firearmShootPoint;
 
-        public override void OnNetworkSpawn()
+        private void Start()
         {
-            base.OnNetworkSpawn();
-            if(!TryGetComponent(out entity))
+            if (!TryGetComponent(out entity))
             {
                 Debug.LogWarning("no entity on this object!", gameObject);
             }
@@ -21,6 +20,11 @@ namespace Balla.Equipment
             {
                 item.GiveEquippable(this);
             }
+            Initialise();
+        }
+        protected virtual void Initialise()
+        {
+
         }
     }
 }

@@ -1,8 +1,3 @@
-using Balla.Core;
-using Balla.Equipment;
-using Balla.Projectile;
-using System.Collections.Generic;
-using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.VFX;
 
@@ -46,9 +41,9 @@ namespace Balla.Equipment
             }
         }
 
-        protected override void Initialise(bool spawned)
+        protected override void InitialiseWeapon(bool spawned)
         {
-            base.Initialise(spawned);
+            base.InitialiseWeapon(spawned);
 
             roundsPerMinute = Mathf.Clamp(roundsPerMinute, 0, 3000);
             timeBetweenRounds = 1f / (roundsPerMinute / 60f);
@@ -66,14 +61,10 @@ namespace Balla.Equipment
 
         protected override void Timestep()
         {
-            if (IsOwner)
+            if(s_attackInput != attackInput || s_altAttackInput != altAttackInput)
             {
-                if(s_attackInput != attackInput || s_altAttackInput != altAttackInput)
-                {
-                    SendInput_RPC(attackInput, altAttackInput);
-                    s_attackInput = attackInput; 
-                    s_altAttackInput = altAttackInput;
-                }
+                s_attackInput = attackInput; 
+                s_altAttackInput = altAttackInput;
             }
             if (muzzleWhenFiring)
             {
@@ -109,9 +100,8 @@ namespace Balla.Equipment
                 muzzleEffect.Play();
                
         }
-        protected void FireOnServer(Vector3 pos, Vector3 dir, double clientTime, RpcParams rpcParams = default)
+        protected void FireSimulation(Vector3 pos, Vector3 dir)
         {
-            Debug.Log($"Fired by Client {rpcParams.Receive.SenderClientId}, Local to Server Time Delta is {(NetworkManager.ServerTime.Time - clientTime):0.000000}");
             Fire(pos, dir);
         }
 

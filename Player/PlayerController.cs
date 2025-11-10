@@ -2,7 +2,6 @@ using Balla;
 using UnityEngine;
 using Balla.Core;
 using System.Collections.Generic;
-using Unity.Netcode;
 namespace Balla.Gameplay.Player
 {
 
@@ -31,7 +30,7 @@ namespace Balla.Gameplay.Player
     /// <br></br> The Player Controller will handle almost all aspects of motion. It will also provde information for motion behaviours that are not handled by this script.
     /// <br></br> Examples include Ziplines and travelling via portals.
     /// </summary>
-    public class PlayerController : BallaNetScript, IBallaMessages
+    public class PlayerController : BallaScript, IBallaMessages
     {
         [SerializeField] internal Rigidbody rb;
         [SerializeField] internal CapsuleCollider capsule;
@@ -45,7 +44,6 @@ namespace Balla.Gameplay.Player
         public MovementState moveState;
         [SerializeField, Tooltip("The transform moved when the player crouches")] internal Transform crouchTransform;
 
-        bool netCrouch;
         bool _lastCrouch;
         #region Looking
 
@@ -245,12 +243,7 @@ namespace Balla.Gameplay.Player
         private void Start()
         {
             ConfigureGroundCheckPositions();
-
-            //Replace with Owner check later.
-            if (IsOwner)
-            {
-                cam = Camera.main;
-            }
+            cam = Camera.main;
         }
 
         private void OnValidate()
@@ -320,8 +313,6 @@ namespace Balla.Gameplay.Player
         {
             CheckState();
             Crouch();
-            if (!IsOwner)
-                return;
             if(currJumpCD >= jumpCooldown)
             {
                 CheckGround();
@@ -331,9 +322,6 @@ namespace Balla.Gameplay.Player
         }
         protected override void AfterFrame()
         {
-            if (!IsOwner)
-                return;
-
             base.AfterFrame();
             if(Input.look != Vector2.zero)
             {
@@ -442,18 +430,13 @@ namespace Balla.Gameplay.Player
 
         protected void CheckState()
         {
-            isCrouching = IsOwner ? Input.crouch : netCrouch;
-            if(IsOwner && _lastCrouch != isCrouching)
+            isCrouching = Input.crouch;
+            if(_lastCrouch != isCrouching)
             {
-                SendCrouch_RPC(isCrouching);
                 _lastCrouch = isCrouching;
             }
         }
-        [Rpc(SendTo.ClientsAndHost)]
-        public void SendCrouch_RPC(bool state)
-        {
-            netCrouch = state;
-        }
+
         /// <summary>
         /// Performs a variety of calculations to determine how the player should move when they are on a surface that also moves.
         /// <br></br>This includes rotating with surfaces the player stands on.

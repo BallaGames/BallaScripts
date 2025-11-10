@@ -1,8 +1,5 @@
-using Balla.Core;
 using Balla.Projectile;
-using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.VFX;
 
 namespace Balla
 {

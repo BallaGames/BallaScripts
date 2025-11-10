@@ -4,12 +4,12 @@ using UnityEngine;
 
 namespace Balla
 {
-    public class SessionManager : BallaNetScript
+    public class SessionManager : BallaScript
     {
-        public override void OnNetworkSpawn()
+        private void Awake()
         {
-            base.OnNetworkSpawn();
             QueryHelper.Initialise();
+
         }
     }
 }

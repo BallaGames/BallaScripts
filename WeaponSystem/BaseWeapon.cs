@@ -1,10 +1,4 @@
-using Balla.Core;
-using Balla.Equipment;
-using Balla.Projectile;
-using System.Collections.Generic;
-using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.VFX;
 
 namespace Balla.Equipment
 {
@@ -45,26 +39,19 @@ namespace Balla.Equipment
         internal void SetAttackInput(bool input) => attackInput = input;
         internal void SetAltAttackInput(bool input) => altAttackInput = input;
 
-        [Rpc(SendTo.NotOwner)]
-        protected void SendInput_RPC(bool attack, bool altAttack)
+        protected override void Init()
         {
-            s_attackInput = attack;
-            s_altAttackInput = altAttack;
+            base.Init();
+            InitialiseWeapon(true);
         }
 
-        public override void OnNetworkSpawn()
-        {
-            base.OnNetworkSpawn();
-            Initialise(true);
-        }
-
-        protected virtual void Initialise(bool spawned)
+        protected virtual void InitialiseWeapon(bool spawned)
         {
 
         }
         private void OnValidate()
         {
-            Initialise(false);
+            InitialiseWeapon(false);
         }
     }
 }

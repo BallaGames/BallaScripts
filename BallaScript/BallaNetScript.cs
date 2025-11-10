@@ -1,5 +1,5 @@
 using Balla.Input;
-using Unity.Netcode;
+using System;
 using UnityEngine;
 
 namespace Balla.Core
@@ -10,7 +10,8 @@ namespace Balla.Core
     /// <br></br>While the implementation of those messages introduces another layer of indirection, I do not think this is an issue, as we optimise the inital calls using delegates.<br></br>
     /// The only things on this component that cannot be overridden are the (Un)Subscribe methods, as these should generally not be tampered with.
     /// </summary>
-    public class BallaNetScript : NetworkBehaviour, IBallaMessages
+    [Obsolete("Balla Net Script is not needed in the no-network fork of BallaScripts. Please inherit from BallaScript instead.")]
+    public class BallaNetScript : MonoBehaviour, IBallaMessages
     {
         /// <summary>
         /// The <see cref="GameCore"/> Singleton that controls these scripts.<br></br>
