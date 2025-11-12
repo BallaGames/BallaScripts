@@ -19,6 +19,7 @@ namespace Balla.Equipment
         }
         protected override void PreFire()
         {
+            base.PreFire();
             if (dataIndex == -1)
             {
                 dataIndex = ProjectileManager.Instance.projectileData.IndexOf(projectileData);

@@ -24,9 +24,44 @@ namespace Balla.Input
         /// </summary>
         public static PlayerInput InputManager;
 
-        internal Vector2 move, look;
-        internal bool jump, crouch, sprint, interact, attack, altAttack, grab, prevEquip, nextEquip;
+        internal Vector2 Move => GetValue(move);
+        internal Vector2 Look => GetValue(look);
+        internal bool Jump 
+        { 
+            get 
+            { 
+                return GetValue(jump);
+            }
+            set
+            {
+                jump = value;
+            } 
+        }
+        internal bool Crouch => GetValue(crouch);
+        internal bool Sprint => GetValue(sprint);
+        internal bool Interact => GetValue(interact);
+        internal bool Attack => GetValue(attack);
+        internal bool AltAttack => GetValue(altAttack);
+        internal bool Grab => GetValue(grab);
+        internal bool PrevEquip => GetValue(prevEquip);
+        internal bool NextEquip => GetValue(nextEquip);
+        Vector2 move, look;
+        bool crouch, sprint, interact, attack, altAttack, grab, prevEquip, nextEquip, jump;
+
+        bool GetValue(bool target)
+        {
+            return target && !gamePaused;
+        }
+        Vector2 GetValue(Vector2 target)
+        {
+            return gamePaused ? Vector2.zero : target;
+        }
+
+        public bool gamePaused;
         public float lookSpeed = 15;
+
+        public Action<bool> OnPause;
+
         public void SubscribeToActionPerform(InputAction action, Action target)
         {
             action.performed += (ctx) => target?.Invoke();
@@ -50,6 +85,7 @@ namespace Balla.Input
             SubscribeInput(actions.Player.Grab, GetGrab);
             SubscribeInput(actions.Player.Next, GetNextEquip);
             SubscribeInput(actions.Player.Previous, GetPrevEquip);
+            SubscribeInput(actions.Player.Pause, GetPause);
         }
 
         public void Terminate()
@@ -65,6 +101,7 @@ namespace Balla.Input
             UnsubscribeInput(actions.Player.Grab, GetGrab);
             UnsubscribeInput(actions.Player.Next , GetNextEquip);
             UnsubscribeInput(actions.Player.Previous, GetPrevEquip);
+            UnsubscribeInput(actions.Player.Pause, GetPause);
             actions.Disable();
             actions.Dispose();
         }
@@ -149,6 +186,26 @@ namespace Balla.Input
         {
             prevEquip = ctx.ReadValueAsButton();
         }
+        void GetPause(InputAction.CallbackContext ctx)
+        {
+            if (ctx.performed)
+            {
+                TogglePause();
+            }
+        }
         #endregion
+
+        void TogglePause()
+        {
+            SetPause(!gamePaused);
+        }
+        public void SetPause(bool paused)
+        {
+            gamePaused = paused;
+            Cursor.lockState = paused ? CursorLockMode.None : CursorLockMode.Locked;
+            Cursor.visible = paused;
+            OnPause?.Invoke(paused);
+        }
+
     }
 }

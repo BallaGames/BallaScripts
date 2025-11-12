@@ -79,6 +79,7 @@ namespace Balla.Core
             {
                 projectilesSpawned[i] = Object.Instantiate(data.projectilePrefab, Vector3.zero, Quaternion.identity);
                 projectilesSpawned[i].poolID = nextProjectileID;
+                projectilesSpawned[i].gameObject.hideFlags = HideFlags.HideInHierarchy;
                 nextProjectileID++;
             }
             Projectiles.AddRange(projectilesSpawned);
@@ -92,6 +93,7 @@ namespace Balla.Core
             for (int i = 0; i < projectileCount; i++)
             {
                 ps[i] = Object.Instantiate(data.projectilePrefab);
+                ps[i].gameObject.hideFlags = HideFlags.HideInHierarchy;
             }
             for (int i = 0; i < ps.Length; i++)
             {

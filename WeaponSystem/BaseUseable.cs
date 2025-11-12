@@ -11,6 +11,9 @@ namespace Balla.Equipment
         /// </summary>
         public Action<BaseUseable, BaseUseable> selectedUseable;
 
+        public string displayName;
+        public Sprite icon;
+
         public Renderer[] renderers;
         public void Show(bool show)
         {

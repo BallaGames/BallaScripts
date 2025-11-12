@@ -8,6 +8,7 @@ namespace Balla
     {
         public ExplosionEffect explosionPrefab;
         public float radius;
+        public float forceMult = 0.2f;
         public float maxDamage, selfDamageMult, enviroDamageMult;
         public AnimationCurve damageFalloff;
     }

@@ -1,11 +1,35 @@
-using Balla.Core;
 using Balla.Entity;
-using RootMotion.FinalIK;
+using Balla.Gameplay;
 using System.Collections.Generic;
+using System.Linq;
+using Unity.Collections;
 using UnityEngine;
 
 namespace Balla.Core
 {
+    public struct ExplosionRequest
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="_pos">Where the explosion occurs.</param>
+        /// <param name="_rot">The rotation of the explosion prefab</param>
+        /// <param name="_data">the Explosion Data object used for this explosion</param>
+        /// <param name="_ID">The Entity ID of the entity causing the explosion.</param>
+        /// <param name="chain">Automatically Incrememnted. Pass the old Chain ID.</param>
+        public ExplosionRequest(Vector3 _pos, Vector3 _rot, ExplosionData _data, ulong _ID)
+        {
+            position = _pos;
+            rotation = _rot;
+            data = _data;
+            ID = _ID;
+        }
+        public ExplosionData data;
+        public Vector3 position, rotation;
+        public ulong ID;
+    }
+
+
     public class ExplosionManager : BallaScript
     {
         public static ExplosionManager Instance {  get; private set; }
@@ -14,7 +38,8 @@ namespace Balla.Core
         public LayerMask checkMask;
         public LayerMask obstructMask;
         public int maxOverlaps = 16;
-
+        public int requestCounter;
+        ExplosionRequest[] requests;
         private void Awake()
         {
             if (Instance == null)
@@ -34,6 +59,33 @@ namespace Balla.Core
             }
         }
 
+        protected override void Timestep()
+        {
+            base.Timestep();
+
+            if (requestCounter == 0)
+                return;
+            for (int i = 0; i < requestCounter; i++)
+            {
+                ExplosionRequest req = requests[i];
+                //Do the explosion.
+                Explode(req);
+            }
+            requestCounter = 0;
+        }
+        public void RequestExplosion(ExplosionData data, Vector3 pos, Vector3 rot, ulong ID)
+        {
+            requests ??= new ExplosionRequest[128];
+            if(requestCounter <= 127)
+            {
+                requests[requestCounter] = new(pos, rot, data, ID);
+                requestCounter++;
+            }
+        }
+        void Explode(ExplosionRequest req)
+        {
+            Explode(req.data, req.position, req.rotation, req.ID);
+        }
         /// <summary>
         /// Performs an explosion at this position
         /// </summary>
@@ -60,7 +112,7 @@ namespace Balla.Core
                         if (Physics.Linecast(position, col.attachedRigidbody.worldCenterOfMass, out RaycastHit hit, obstructMask, QueryTriggerInteraction.Ignore))
                         {
                             Debug.DrawLine(position, hit.point, Color.green, 5);
-                            float baseDamage = Mathf.Lerp(expType.maxDamage, 0, expType.damageFalloff.Evaluate(Mathf.InverseLerp(0, expType.radius, hit.distance)));
+                            float baseDamage = expType.maxDamage * expType.damageFalloff.Evaluate(Mathf.InverseLerp(0, expType.radius, hit.distance));
                             if(hit.rigidbody == null)
                             {
                                 //obstruction found
@@ -82,10 +134,12 @@ namespace Balla.Core
                                 }
                                 else
                                 {
-                                    if (col.attachedRigidbody.TryGetComponent(out BaseEntity b))
+                                    //Only entities that are alive should be damaged. Explosives will now only explode if they have NOT just died.
+                                    if (QueryHelper.GetEntity(hit.rigidbody, out BaseEntity b) && !b.diedThisFrame)
                                     {
                                         //Hit something with health that was NOT the owner
                                         b.ModifyHealth(baseDamage);
+                                        hit.rigidbody.AddExplosionForce(baseDamage * expType.forceMult, position, expType.radius, 0.3f, ForceMode.Impulse);
                                         Debug.Log("Hit non-owner with explosion");
                                     }
                                 }

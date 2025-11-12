@@ -9,11 +9,11 @@ namespace Balla.Equipment
         [SerializeField] protected Transform muzzle;
         [SerializeField, Tooltip("How many times this firearm will fire per minute")] protected int roundsPerMinute;
         [SerializeField, ReadOnly, Tooltip("The time between rounds, exposed to help developers.")] protected float timeBetweenRounds;
-        [SerializeField, ReadOnly] protected float fireTimeIncrement;
         /// <summary>
         /// How long the weapon has currently waited before being able to fire again.
         /// </summary>
         float fireTimer;
+        public int shotsPerAttack = 1;
         [SerializeField] protected bool canAutoFire;
         [SerializeField] protected bool usesBurstFire;
         [SerializeField] protected int shotsInBurst;
@@ -25,7 +25,7 @@ namespace Balla.Equipment
         public VisualEffect muzzleEffect;
         public Vector3 MuzzlePoint => muzzle != null ? muzzle.position : Vector3.zero;
         protected bool CanFire => fireTimer >= timeBetweenRounds && (canAutoFire || !fired) && (!usesBurstFire || burstRoundsFired == 0);
-
+        public RecoilData recoilData;
         protected virtual void CycleLogic()
         {
             if (s_attackInput && CanFire)
@@ -47,7 +47,6 @@ namespace Balla.Equipment
 
             roundsPerMinute = Mathf.Clamp(roundsPerMinute, 0, 3000);
             timeBetweenRounds = 1f / (roundsPerMinute / 60f);
-            fireTimeIncrement = timeBetweenRounds * Time.fixedDeltaTime;
 
         }
         /// <summary>
@@ -56,7 +55,10 @@ namespace Balla.Equipment
         /// </summary>
         protected virtual void PreFire()
         {
-            
+            if (holder != null)
+            {
+                holder.ReceiveRecoil();
+            }
         }
 
         protected override void Timestep()

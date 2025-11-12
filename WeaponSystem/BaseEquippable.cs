@@ -18,7 +18,10 @@ namespace Balla.Equipment
         {
             holder = target;
         }
-
+        private void Start()
+        {
+            Init();
+        }
         public virtual void OnEquip()
         {
             equipped?.Invoke(this);

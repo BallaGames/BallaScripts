@@ -94,8 +94,6 @@ namespace Balla.Core
                 return;
             }
         }
-        long _t;
-
         void CreateStartProjectiles()
         {
             for (int i = 0; i < pools.Count; i++)
@@ -212,7 +210,7 @@ namespace Balla.Core
                         proj.Terminate();
                         if(proj.data.explosionData != null && proj.data.explodeOnExpire)
                         {
-                            ExplosionManager.Instance.Explode(proj.data.explosionData, proj.targetPos, Quaternion.LookRotation(proj.transform.forward, proj.transform.up).eulerAngles, proj.owner);
+                            ExplosionManager.Instance.RequestExplosion(proj.data.explosionData, proj.targetPos, Quaternion.LookRotation(proj.transform.forward, proj.transform.up).eulerAngles, proj.owner);
                         }
                     }
                 }
@@ -259,7 +257,7 @@ namespace Balla.Core
 
             if (proj.bounces < 0)
             {
-                ExplosionManager.Instance.Explode(proj.data.explosionData, hit.point + hit.normal * 0.02f, Quaternion.LookRotation(proj.transform.forward, hit.normal).eulerAngles, proj.owner);
+                ExplosionManager.Instance.RequestExplosion(proj.data.explosionData, hit.point + hit.normal * 0.02f, Quaternion.LookRotation(proj.transform.forward, hit.normal).eulerAngles, proj.owner);
             }
         }
         /// <summary>

@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace Balla.Gameplay
 {
+    [CreateAssetMenu(fileName = "HitscanData", menuName = "Weapon System/HitscanData")]
     /// <summary>
     /// The HitscanData class contains the information required to fire a hitscan weapon.<br></br>
     /// This includes the prefab to instantiate into the pool, the tracer speed and the stats relating to damage.<br></br>
@@ -9,7 +10,9 @@ namespace Balla.Gameplay
     /// </summary>
     public class HitscanData : ScriptableObject
     {
-        public GameObject tracerObject;
+        public HitscanTracer tracerObject;
+        public float hitForceMult = 0.2f;
+        public int tracerStartCount;
         public float tracerSpeed = 25f;
         public float damageAtMinRange = 15, damageAtMaxRange = 2;
         public float minRange = 15, maxRange = 2;

@@ -22,8 +22,8 @@ namespace Balla.Entity
         [ReadOnly] public float currentHealth;
         [SerializeField] protected float maxHealth;
         protected float HealthPercentage => currentHealth / maxHealth;
-       
-
+        public bool Alive => currentHealth > 0;
+        [ReadOnly] public bool diedThisFrame;
         /// <summary>
         /// Subtracts damageTaken from the entity's health. Not all parameters have to be passed.
         /// </summary>
@@ -34,6 +34,22 @@ namespace Balla.Entity
         internal virtual void ModifyHealth(float healthDelta, Vector3 soucePos = default, Vector3 sourceDir = default)
         {
             currentHealth = Mathf.Clamp(currentHealth - healthDelta, 0, maxHealth);
+            if(currentHealth <= 0)
+            {
+                Die();
+            }
+        }
+        protected virtual void Die()
+        {
+            diedThisFrame = true;
+        }
+        protected override void Timestep()
+        {
+            if (diedThisFrame)
+            {
+                diedThisFrame = false;
+            }
+            base.Timestep();
         }
 
 
@@ -43,6 +59,8 @@ namespace Balla.Entity
             {
                 rb = GetComponent<Rigidbody>();
             }
+            OnSpawn();
+            currentHealth = maxHealth;
         }
         public virtual void OnSpawn()
         {

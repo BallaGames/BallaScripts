@@ -9,7 +9,8 @@ namespace Balla.Equipment
     {
         [SerializeField] protected int ammunition;
         [SerializeField] protected int ammoPerAttack;
-
+        public Vector3 idleOffset;
+        public Quaternion idleRotation;
 
         protected bool attackInput, altAttackInput;
         protected bool s_attackInput;
