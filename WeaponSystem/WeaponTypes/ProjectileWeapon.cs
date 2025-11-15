@@ -14,7 +14,7 @@ namespace Balla.Equipment
         protected override void Fire(Vector3 pos, Vector3 dir)
         {
             base.Fire(pos, dir);
-            var p = ProjectileManager.Instance.GetSingleProjectile(this);
+            var p = ProjectileManager.Instance.GetSingleProjectile(this, dir);
             p.transform.position = pos;
         }
         protected override void PreFire()
@@ -24,7 +24,7 @@ namespace Balla.Equipment
             {
                 dataIndex = ProjectileManager.Instance.projectileData.IndexOf(projectileData);
             }
-            FireSimulation(ProjectileManager.FireFromMuzzle ? muzzle.position : holder.firearmShootPoint.position, holder.firearmShootPoint.forward);
+            FireSimulation(ProjectileManager.FireFromMuzzle ? muzzle.position : holder.firearmShootPoint.position);
             PostFire();
         }
 

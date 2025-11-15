@@ -26,6 +26,37 @@ namespace Balla.Equipment
         public Vector3 MuzzlePoint => muzzle != null ? muzzle.position : Vector3.zero;
         protected bool CanFire => fireTimer >= timeBetweenRounds && (canAutoFire || !fired) && (!usesBurstFire || burstRoundsFired == 0);
         public RecoilData recoilData;
+
+        [SerializeField, ReadOnly] internal float currentSpread;
+        public bool useSpread;
+        [Tooltip("If true, the weapon will fire each shot an even step apart from each other Currently only works on one axis.")]
+        public bool useEvenSpread;
+        [SerializeField] protected bool spreadBeforeShot;
+        [SerializeField] protected float evenSpreadAmount;
+        [SerializeField] protected float maxSpreadAngle;
+        [SerializeField] protected float spreadDecay;
+        [SerializeField] protected float spreadPerShot;
+        [SerializeField] protected Vector2 spreadScale;
+
+        public override Vector2 CrosshairSize
+        {
+            get
+            {
+                if (!useSpread)
+                {
+                    return crosshairScaling;
+                }
+                if (useEvenSpread)
+                {
+                    return crosshairScaling * new Vector2(1 + evenSpreadAmount, 1);
+                }
+                else
+                {
+                    return crosshairScaling * (1 + currentSpread);
+                }
+            }
+        }
+
         protected virtual void CycleLogic()
         {
             if (s_attackInput && CanFire)
@@ -86,6 +117,11 @@ namespace Balla.Equipment
             CycleLogic();
             if (!s_attackInput)
                 fired = false;
+
+            if (useSpread)
+            {
+                currentSpread = Mathf.Clamp(currentSpread - (spreadDecay * Delta), 0, maxSpreadAngle);
+            }
         }
         /// <summary>
         /// This method is where the actual "fire" code is executed. Override this method for a weapon type's behaviour.
@@ -100,11 +136,51 @@ namespace Balla.Equipment
         {
             if (muzzleEffect != null && !muzzleWhenFiring)
                 muzzleEffect.Play();
-               
+
         }
-        protected void FireSimulation(Vector3 pos, Vector3 dir)
+        protected virtual void FireSimulation(Vector3 pos)
         {
-            Fire(pos, dir);
+            if (useSpread)
+            {
+                if (spreadBeforeShot)
+                {
+                    if (!useEvenSpread)
+                    {
+                        currentSpread = Mathf.Min(currentSpread + spreadPerShot, maxSpreadAngle);
+                    }
+                }
+
+                Vector2 spreadAngle = Vector2.zero;
+                for (int i = 0; i < shotsPerAttack; i++)
+                {
+                    Vector3 dir = Vector3.forward;
+                    if (useEvenSpread)
+                    {
+                        spreadAngle.y = ((Mathf.InverseLerp(0, shotsPerAttack-1, i) * 2) - 1) * evenSpreadAmount;
+                    }
+                    else
+                    {
+                        spreadAngle = (currentSpread * maxSpreadAngle) * (Random.insideUnitCircle * spreadScale);
+                    }
+                    dir = Quaternion.Euler(spreadAngle.x, spreadAngle.y, 0) * dir;
+                    Fire(pos, holder.firearmShootPoint.rotation * dir);
+                }
+
+                if (!spreadBeforeShot)
+                {
+                    if (!useEvenSpread)
+                    {
+                        currentSpread = Mathf.Min(currentSpread + spreadPerShot, maxSpreadAngle);
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < shotsPerAttack; i++)
+                {
+                    Fire(pos, holder.firearmShootPoint.forward);
+                }
+            }
         }
 
 

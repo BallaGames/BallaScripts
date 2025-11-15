@@ -11,6 +11,7 @@ namespace Balla.Equipment
         protected override void Fire(Vector3 pos, Vector3 dir)
         {
             base.Fire(pos, dir);
+            HitscanManager.Instance.RequestHitscan(this, dir);
         }
         protected override void PreFire()
         {
@@ -19,12 +20,14 @@ namespace Balla.Equipment
             {
                 dataIndex = HitscanManager.Instance.hitscanData.IndexOf(hitscanData);
             }
-            FireLogic();
+            FireSimulation(HitscanManager.FireFromMuzzle ? MuzzlePoint : holder.firearmShootPoint.position);
             PostFire();
         }
-        void FireLogic()
+
+        protected override void FireSimulation(Vector3 pos)
         {
-            HitscanManager.Instance.RequestHitscan(this);
+            base.FireSimulation(pos);
         }
+
     }
 }

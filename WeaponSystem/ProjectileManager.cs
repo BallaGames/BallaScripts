@@ -34,15 +34,6 @@ namespace Balla.Core
             "\n\"Chunking\" projectile spawns allows for lower constant cpu drain from spawning lots of projectiles repeatedly.")] internal int projectilesInChunk = 25;
         internal static uint activeCount;
 
-
-        private void OnGUI()
-        {
-            GUILayout.BeginVertical();
-            GUILayout.Space(250);
-            GUILayout.Label("active projectiles: " + activeCount);
-            GUILayout.EndVertical();
-        }
-
         public List<ProjectileData> projectileData;
         public static void AddProjectile(NetProjectile proj)
         {
@@ -118,12 +109,11 @@ namespace Balla.Core
         NativeArray<SpherecastCommand> commands;
         NativeArray<RaycastHit> hits;
 
-        public NetProjectile GetSingleProjectile(ProjectileWeapon w)
+        public NetProjectile GetSingleProjectile(ProjectileWeapon w, Vector3 direction)
         {
             NetProjectile proj = pools[w.dataIndex].GetSingleProjectile();
             Vector3 pos = fireFromMuzzle ? w.MuzzlePoint : w.holder.firearmShootPoint.position;
-            Vector3 dir = w.holder.firearmShootPoint.forward;
-            proj.SimSetup(pos, w.MuzzlePoint, dir, w.holder.entity.entityID);
+            proj.SimSetup(pos, w.MuzzlePoint, direction, w.holder.entity.entityID);
             activeCount++;
             return proj;
         }

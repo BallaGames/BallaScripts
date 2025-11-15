@@ -10,6 +10,10 @@ namespace Balla.Equipment
         public BaseWeapon[] weapons;
         public RecoilData recoilData;
         Vector3 addPos, addRot;
+        public Transform camRecoilTarget;
+        public Vector3 camPosScale, camRotScale;
+        Vector3 camPos, camRot, camPosTarg, camRotTarg;
+        float camIntensity;
         protected override void Initialise()
         {
             base.Initialise();
@@ -78,13 +82,18 @@ namespace Balla.Equipment
         public override void ReceiveRecoil()
         {
             recoilIntensity += recoilData.intensityClimb;
+            camIntensity += recoilData.camRecoilAdd;
             linRecoilTarg += MathUtils.Vec3Random(recoilData.linearForceMin, recoilData.linearForceMax) * recoilData.linearIntensity.Evaluate(recoilIntensity);
             angRecoilTarg += MathUtils.Vec3Random(recoilData.angularForceMin, recoilData.angularForceMax) * recoilData.angularIntensity.Evaluate(recoilIntensity);
+            camPosTarg += MathUtils.Vec3Random(recoilData.minCamPosAdd, recoilData.maxCamPosAdd) * recoilData.camPosIntensity.Evaluate(camIntensity);
+            camRotTarg += MathUtils.Vec3Random(recoilData.minCamRotAdd, recoilData.maxCamRotAdd) * recoilData.camRotIntensity.Evaluate(camIntensity);
+
             linRecoilMax = linRecoilTarg;
             angRecoilMax = angRecoilTarg;
 
             recoilWaitTime = 0;
             recoilReturnTime = 0;
+
         }
         protected override void CalculateRecoil()
         {
@@ -106,13 +115,33 @@ namespace Balla.Equipment
                     recoilReturnTime = Mathf.Clamp01(recoilReturnTime + (Time.smoothDeltaTime * recoilData.recoilReturnSpeed));
                     linRecoilTarg = Vector3.LerpUnclamped(linRecoilMax, Vector3.zero, recoilData.linearReturnCurve.Evaluate(recoilReturnTime));
                     angRecoilTarg = Vector3.LerpUnclamped(angRecoilMax, Vector3.zero, recoilData.angularReturnCurve.Evaluate(recoilReturnTime));
-                    recoilIntensity = Mathf.Clamp01(recoilIntensity - (recoilData.intensityDecay * (1 + (recoilIntensity * recoilData.intensityDecayMult))));
+                    recoilIntensity = Mathf.Clamp01(recoilIntensity - (recoilData.intensityDecay * (1 + (recoilIntensity * recoilData.intensityDecayMult))) * Time.smoothDeltaTime);
+
+                    camIntensity = Mathf.Clamp01(camIntensity - (recoilData.camRecoilDecay * Time.smoothDeltaTime));
                 }
                 else
                 {
                     recoilWaitTime += Time.smoothDeltaTime;
                 }
                 linearRecoilCurr = Vector3.Lerp(linearRecoilCurr, linRecoilTarg, recoilData.linearSharp * Time.smoothDeltaTime);
+                angularRecoilCurr = Vector3.Lerp(angularRecoilCurr, angRecoilTarg, recoilData.angularSharp * Time.smoothDeltaTime);
+                
+                if(camRecoilTarget != null)
+                {
+                    if(camPosTarg != Vector3.zero)
+                    {
+                        camPosTarg = Vector3.Lerp(camPosTarg, Vector3.zero, recoilData.camPosDecay * Time.smoothDeltaTime);
+                    }
+                    if(camRotTarg != Vector3.zero)
+                    {
+                        camRotTarg = Vector3.Lerp(camRotTarg, Vector3.zero, recoilData.camRotDecay * Time.smoothDeltaTime);
+                    }
+                    camPos = Vector3.Lerp(camPos, camPosTarg, recoilData.camPosSharp * Time.smoothDeltaTime);
+                    camRot = Vector3.Lerp(camRot, camRotTarg, recoilData.camRotSharp * Time.smoothDeltaTime);
+                    
+                    camRecoilTarget.SetLocalPositionAndRotation(camPos.ScaleComponent(camPosScale), Quaternion.Euler(camRot.ScaleComponent(camRotScale)));
+                }
+                
                 if (recoilData.addPosition)
                 {
                     addPos = new Vector3()
@@ -121,9 +150,11 @@ namespace Balla.Equipment
                         y = recoilData.addYPos.Evaluate(recoilReturnTime),
                         z = recoilData.addZPos.Evaluate(recoilReturnTime),
                     };
+                }
+                else
+                {
                     addPos = Vector3.zero;
                 }
-                angularRecoilCurr = Vector3.Lerp(angularRecoilCurr, angRecoilTarg, recoilData.angularSharp * Time.smoothDeltaTime);
                 if (recoilData.addRotation)
                 {
                     addRot = new Vector3()

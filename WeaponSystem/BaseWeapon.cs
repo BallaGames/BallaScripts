@@ -1,4 +1,6 @@
+using Balla.Equipment;
 using UnityEngine;
+using UnityEngine.VFX;
 
 namespace Balla.Equipment
 {
@@ -15,6 +17,15 @@ namespace Balla.Equipment
         protected bool attackInput, altAttackInput;
         protected bool s_attackInput;
         protected bool s_altAttackInput;
+
+        public Vector2 crosshairScaling;
+        public virtual Vector2 CrosshairSize
+        {
+            get
+            {
+                return crosshairScaling;
+            }
+        }
 
         /// <summary>
         /// Used to find out which trigger should be used for the attack animation.

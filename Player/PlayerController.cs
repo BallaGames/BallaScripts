@@ -2,6 +2,7 @@ using Balla;
 using UnityEngine;
 using Balla.Core;
 using System.Collections;
+using System.Collections.Generic;
 namespace Balla.Gameplay.Player
 {
 
@@ -257,6 +258,7 @@ namespace Balla.Gameplay.Player
         [ReadOnly, SerializeField] bool isClimbing;
         [ReadOnly, SerializeField] float climbRate;
 
+
         #endregion
         #region Unity Methods
 
@@ -358,7 +360,6 @@ namespace Balla.Gameplay.Player
                 CheckGround();
             }
             HandleMotion();
-            
         }
         protected override void AfterFrame()
         {
@@ -518,6 +519,7 @@ namespace Balla.Gameplay.Player
             isClimbing = true;
             float t = 0;
             bool climbOnBody = climbTargetRB != null;
+            rb.isKinematic = true;
             Vector3 start;
             if(climbOnBody)
             {

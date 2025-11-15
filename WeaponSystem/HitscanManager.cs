@@ -10,11 +10,11 @@ namespace Balla.Gameplay
 {
     public struct HitscanRequest
     {
-        public HitscanRequest(HitscanWeapon weapon)
+        public HitscanRequest(HitscanWeapon weapon, Vector3 direction)
         {
             w = weapon;
             startPoint = HitscanManager.FireFromMuzzle ? weapon.MuzzlePoint : weapon.holder.firearmShootPoint.position;
-            direction = weapon.holder.firearmShootPoint.forward;
+            this.direction = direction;
             distance = weapon.hitscanData.maxRange;
             tracer = HitscanManager.Instance.GetTracer(w);
             SetUpTracer();
@@ -83,14 +83,11 @@ namespace Balla.Gameplay
         {
             return pools[w.dataIndex].GetSingleTracer();
         }
-        public void RequestHitscan(HitscanWeapon weapon)
+        public void RequestHitscan(HitscanWeapon weapon, Vector3 direction)
         {
             requests ??= new HitscanRequest[maxCastsPerFrame];
-            for (int i = 0; i < weapon.shotsPerAttack; i++)
-            {
-                requests[requestCounter + i] = new(weapon);
-            }
-            requestCounter+=weapon.shotsPerAttack;
+            requests[requestCounter] = new(weapon, direction);
+            requestCounter++;
         }
         NativeArray<RaycastCommand> commands;
         NativeArray<RaycastHit> hits;

@@ -18,5 +18,18 @@ namespace Balla
             }
             return vec;
         }
+        public static Vector3 ScaleComponent(this Vector3 vec, Vector3 scale)
+        {
+            return new(vec.x * scale.x, vec.y * scale.y, vec.z * scale.z);
+        }
+
+        public static Vector3 CurveToVector(AnimationCurve x, AnimationCurve y, AnimationCurve z, float t)
+        {
+            return new Vector3(x.Evaluate(t), y.Evaluate(t), z.Evaluate(t));
+        }
+        public static Vector3 CurveToVector(AnimationCurve x, AnimationCurve y, AnimationCurve z, Vector3 t)
+        {
+            return new Vector3(x.Evaluate(t.x), y.Evaluate(t.y), z.Evaluate(t.z));
+        }
     }
 }
