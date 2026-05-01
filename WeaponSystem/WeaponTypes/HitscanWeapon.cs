@@ -3,31 +3,26 @@ using UnityEngine;
 
 namespace Balla.Equipment
 {
-    public class HitscanWeapon : RangedWeapon
+    public class HitscanWeapon : RangedFireModule
     {
         public HitscanData hitscanData;
         public int dataIndex = -1;
+        internal override Vector3 FirePoint => HitscanManager.FireFromMuzzle ? base.MuzzlePoint : weapon.holder.firearmShootPoint.position;
 
-        protected override void Fire(Vector3 pos, Vector3 dir)
+        internal override void Fire(Vector3 pos, Vector3 dir)
         {
             base.Fire(pos, dir);
             HitscanManager.Instance.RequestHitscan(this, dir);
         }
-        protected override void PreFire()
+        internal override void PreFire()
         {
             base.PreFire();
             if(dataIndex == -1)
             {
                 dataIndex = HitscanManager.Instance.hitscanData.IndexOf(hitscanData);
             }
-            FireSimulation(HitscanManager.FireFromMuzzle ? MuzzlePoint : holder.firearmShootPoint.position);
+            FireSimulation();
             PostFire();
         }
-
-        protected override void FireSimulation(Vector3 pos)
-        {
-            base.FireSimulation(pos);
-        }
-
     }
 }

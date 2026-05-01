@@ -13,10 +13,11 @@ namespace Balla.Gameplay
         public HitscanRequest(HitscanWeapon weapon, Vector3 direction)
         {
             w = weapon;
-            startPoint = HitscanManager.FireFromMuzzle ? weapon.MuzzlePoint : weapon.holder.firearmShootPoint.position;
+            startPoint = weapon.FirePoint;
             this.direction = direction;
             distance = weapon.hitscanData.maxRange;
             tracer = HitscanManager.Instance.GetTracer(w);
+            charge = w.Weapon.CurrentCharge;
             SetUpTracer();
         }
         private readonly void SetUpTracer()
@@ -24,6 +25,7 @@ namespace Balla.Gameplay
             tracer.alive = true;
             tracer.start = w.MuzzlePoint;
         }
+        public float charge;
         public Vector3 startPoint;
         public Vector3 direction;
         public float distance;
@@ -110,7 +112,7 @@ namespace Balla.Gameplay
             for (int i = 0; i < requestCounter; i++)
             {
                 HitscanRequest hr = requests[i];
-                owners[i] = hr.w.holder.entity;
+                owners[i] = hr.w.Weapon.holder.entity;
                 commands[i] = new(hr.startPoint, hr.direction, qp, hr.distance);
             }
             //Create the job handle and execute it
@@ -164,7 +166,7 @@ namespace Balla.Gameplay
                     req.tracer.Setup(req.w.MuzzlePoint, req.startPoint + (req.direction * req.distance));
                     if(req.w.hitscanData.explosionData != null)
                     {
-                        ExplosionManager.Instance.RequestExplosion(req.w.hitscanData.explosionData, req.tracer.end, Vector3.zero, req.w.holder.entity.entityID);
+                        ExplosionManager.Instance.RequestExplosion(req.w.hitscanData.explosionData, req.tracer.end, Vector3.zero, req.w.Weapon.holder.entity.entityID);
                     }
                 }
             }
@@ -185,7 +187,7 @@ namespace Balla.Gameplay
             }
             if (req.w.hitscanData.explosionData != null)
             {
-                ExplosionManager.Instance.RequestExplosion(req.w.hitscanData.explosionData, hit.point + hit.normal, Quaternion.LookRotation(req.direction, hit.normal).eulerAngles, req.w.holder.entity.entityID);
+                ExplosionManager.Instance.RequestExplosion(req.w.hitscanData.explosionData, hit.point + hit.normal, Quaternion.LookRotation(req.direction, hit.normal).eulerAngles, req.w.Weapon.holder.entity.entityID);
                 req.tracer.end = hit.point;
             }
         }

@@ -3,35 +3,30 @@ using UnityEngine;
 
 namespace Balla.Equipment
 {
-    public class ProjectileWeapon : RangedWeapon
+    public class ProjectileWeapon : RangedFireModule
     {
         [SerializeField] internal ProjectileData projectileData;
         internal int dataIndex = -1;
-
+        internal override Vector3 FirePoint => ProjectileManager.FireFromMuzzle ? base.MuzzlePoint : weapon.holder.firearmShootPoint.position;
         /// <summary>
         /// The code executed on the server when firing.
         /// </summary>
-        protected override void Fire(Vector3 pos, Vector3 dir)
+        internal override void Fire(Vector3 pos, Vector3 dir)
         {
             base.Fire(pos, dir);
             var p = ProjectileManager.Instance.GetSingleProjectile(this, dir);
-            p.transform.position = pos;
+            p.transform.position = MuzzlePoint + pos;
+            p.charge = weapon.CurrentCharge;
         }
-        protected override void PreFire()
+        internal override void PreFire()
         {
             base.PreFire();
             if (dataIndex == -1)
             {
                 dataIndex = ProjectileManager.Instance.projectileData.IndexOf(projectileData);
             }
-            FireSimulation(ProjectileManager.FireFromMuzzle ? muzzle.position : holder.firearmShootPoint.position);
+            FireSimulation();
             PostFire();
-        }
-
-        private void OnValidate()
-        {
-            //Clamp to upper limit of 3000, after which the time between rounds is less than fixed delta time.
-            InitialiseWeapon(false);
         }
     }
 }

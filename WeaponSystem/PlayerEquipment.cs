@@ -1,4 +1,7 @@
 using Balla.Core;
+using Balla.Gameplay.Player;
+using Balla.UI;
+using System;
 using UnityEngine;
 
 namespace Balla.Equipment
@@ -8,12 +11,29 @@ namespace Balla.Equipment
         public BaseWeapon CurrentWeapon => weapons[weaponIndex];
         public int weaponIndex;
         public BaseWeapon[] weapons;
+        public PlayerController pc;
+
+        public BaseUseable ability;
         public RecoilData recoilData;
         Vector3 addPos, addRot;
         public Transform camRecoilTarget;
         public Vector3 camPosScale, camRotScale;
         Vector3 camPos, camRot, camPosTarg, camRotTarg;
         float camIntensity;
+        public Action<BaseWeapon, BaseWeapon> weaponSwitched;
+        public bool isUnarmed;
+
+        public override (float crouch, float move, bool air) SpreadInfluence
+        {
+            get
+            {
+                //If we have no weapon, return 0, 0
+                if (CurrentWeapon == null || pc == null)
+                    return base.SpreadInfluence;
+                return (pc.currentCrouch, Input.Move.magnitude, !pc.isGrounded || pc.moveState == MovementState.Slide);
+            }
+        }
+
         protected override void Initialise()
         {
             base.Initialise();
@@ -25,12 +45,20 @@ namespace Balla.Equipment
                 if (weapons[i] != null)
                 {
                     if (i == 0)
+                    {
                         weapons[i].OnSelect(null);
+                        PlayerUI.Instance.WeaponSwitched(CurrentWeapon);
+                    }
                     else
                         weapons[i].OnDeselect(null);
                 }
             }
             recoilReturnTime = 1;
+
+            if(pc == null && !TryGetComponent(out pc))
+            {
+                Debug.LogWarning("Could not fully initialise Player Equipment on this object - no Player Controller was found!");
+            }
         }
         void PreviousWeapon()
         {
@@ -61,10 +89,12 @@ namespace Balla.Equipment
             CurrentWeapon.OnSelect(oldWeapon);
             oldWeapon.OnUnequip();
             CurrentWeapon.OnEquip();
+            PlayerUI.Instance.WeaponSwitched(CurrentWeapon);
             if(CurrentWeapon is RangedWeapon rw)
             {
                 recoilData = rw.recoilData;
             }
+            weaponSwitched?.Invoke(oldWeapon, CurrentWeapon);
         }
         protected override void OnFrame()
         {
@@ -73,10 +103,13 @@ namespace Balla.Equipment
         protected override void Timestep()
         {
             base.Timestep();
-            if(CurrentWeapon != null)
+            if (!isUnarmed)
             {
-                CurrentWeapon.SetAttackInput(Input.Attack);
-                CurrentWeapon.SetAltAttackInput(Input.AltAttack);
+                if (CurrentWeapon != null)
+                {
+                    CurrentWeapon.SetAttackInput(Input.Attack);
+                    CurrentWeapon.SetAltAttackInput(Input.AltAttack);
+                }
             }
         }
         public override void ReceiveRecoil()

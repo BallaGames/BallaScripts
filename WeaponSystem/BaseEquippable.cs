@@ -14,6 +14,9 @@ namespace Balla.Equipment
         public Action<BaseEquippable> equipped, unequipped, used, stopped;
 
         [SerializeField, ReadOnly] internal EquipmentHolder holder;
+
+        public string displayName;
+        public Sprite icon;
         public virtual void GiveEquippable(EquipmentHolder target)
         {
             holder = target;

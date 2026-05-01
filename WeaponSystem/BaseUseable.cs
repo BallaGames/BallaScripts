@@ -4,17 +4,18 @@ using UnityEngine;
 
 namespace Balla.Equipment
 {
+    /// <summary>
+    /// A subclass of equippable that defines additional methods for using an object.
+    /// </summary>
     public abstract class BaseUseable : BaseEquippable
     {
         /// <summary>
         /// First arg is the old weapon, second arg is the new weapon
         /// </summary>
         public Action<BaseUseable, BaseUseable> selectedUseable;
-
-        public string displayName;
-        public Sprite icon;
-
         public Renderer[] renderers;
+
+        public bool applyViewLayer = true;
         public void Show(bool show)
         {
             for (int i = 0; i < renderers.Length; i++)
@@ -26,11 +27,14 @@ namespace Balla.Equipment
 
         protected override void Init()
         {
-            for (int i = 0;i < renderers.Length; i++)
+            if (applyViewLayer)
             {
-                if (renderers[i] != null)
+                for (int i = 0;i < renderers.Length; i++)
                 {
-                    renderers[i].gameObject.layer = 8;
+                    if (renderers[i] != null)
+                    {
+                        renderers[i].gameObject.layer = 8;
+                    }
                 }
             }
         }

@@ -15,6 +15,7 @@ namespace Balla.Gameplay
         public int tracerStartCount;
         public float tracerSpeed = 25f;
         public float damageAtMinRange = 15, damageAtMaxRange = 2;
+        public float minChargeDamageMult = 0.5f;
         public float minRange = 15, maxRange = 2;
         public AnimationCurve damageFalloff = AnimationCurve.Linear(0, 0, 1, 1);
         public ExplosionData explosionData;

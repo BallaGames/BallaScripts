@@ -1,5 +1,8 @@
 using Balla.Core;
 using Balla.Entity;
+using Balla.Equipment;
+using Balla.Gameplay.Player;
+using Balla.UI;
 using UnityEngine;
 
 namespace Balla.Equipment
@@ -14,6 +17,10 @@ namespace Balla.Equipment
         protected float recoilWaitTime, recoilReturnTime;
         protected bool recoilReturning;
         protected float recoilIntensity;
+        /// <summary>
+        /// Override this on all children to get the amount by which spread should be influenced.
+        /// </summary>
+        public virtual (float crouch, float move, bool air) SpreadInfluence => (0, 0, false);
         private void Start()
         {
             if (!TryGetComponent(out entity))

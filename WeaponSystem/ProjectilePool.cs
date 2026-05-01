@@ -16,14 +16,14 @@ namespace Balla.Core
 
         public HashSet<int> aliveProjectiles;
 
-        public List<NetProjectile> Projectiles { get; private set; }
+        public List<Projectile.Projectile> Projectiles { get; private set; }
         static int nextID = 0;
         public int ID;
         protected ushort nextProjectileID;
         public ProjectileData data;
-        public NetProjectile GetSingleProjectile()
+        public Projectile.Projectile GetSingleProjectile()
         {
-            NetProjectile proj = null;
+            Projectile.Projectile proj = null;
             for (int i = 0; i < Projectiles.Count; i++)
             {
                 if (!Projectiles[i].alive)
@@ -36,7 +36,7 @@ namespace Balla.Core
             if (proj == null)
             {
                 //Create new ones, because we still have capacity.
-                CreateProjectiles(out NetProjectile[] projectilesSpawned);
+                CreateProjectiles(out Projectile.Projectile[] projectilesSpawned);
                 //Then pull the first one from this.
                 proj = projectilesSpawned[0];
             }
@@ -50,10 +50,10 @@ namespace Balla.Core
         /// </summary>
         /// <param name="count"></param>
         /// <returns></returns>
-        public NetProjectile[] GetMultipleProjectiles(int count)
+        public Projectile.Projectile[] GetMultipleProjectiles(int count)
         {
             //Create an array with capacity for the request
-            NetProjectile[] projectiles = new NetProjectile[count];
+            Projectile.Projectile[] projectiles = new Projectile.Projectile[count];
             //Then check if we have enough projectiles without needing to make more.
             //If this part evaluates to true, then we should make more projectiles.
             int index = 0;
@@ -62,7 +62,7 @@ namespace Balla.Core
                 //Whilst we have less un-used projectiles than we need, 
                 while (Projectiles.Count - ProjectileManager.activeCount < count)
                 {
-                    CreateProjectiles(out NetProjectile[] projectilesSpawned);
+                    CreateProjectiles(out Projectile.Projectile[] projectilesSpawned);
                     for (int i = 0; i < ProjectileManager.Instance.projectilesInChunk && index < count; i++, index++)
                     {
                         projectiles[index] = projectilesSpawned[i];
@@ -71,9 +71,9 @@ namespace Balla.Core
             }
             return projectiles;
         }
-        public void CreateProjectiles(out NetProjectile[] projectilesSpawned)
+        public void CreateProjectiles(out Projectile.Projectile[] projectilesSpawned)
         {
-            projectilesSpawned = new NetProjectile[ProjectileManager.Instance.projectilesInChunk];
+            projectilesSpawned = new Projectile.Projectile[ProjectileManager.Instance.projectilesInChunk];
             //then instantiate another chunk of projectiles
             for (int i = 0; i < projectilesSpawned.Length; i++)
             {
@@ -89,7 +89,7 @@ namespace Balla.Core
         {
             System.Diagnostics.Stopwatch stopwatch = new();
             stopwatch.Start();
-            NetProjectile[] ps = new NetProjectile[projectileCount];
+            Projectile.Projectile[] ps = new Projectile.Projectile[projectileCount];
             for (int i = 0; i < projectileCount; i++)
             {
                 ps[i] = Object.Instantiate(data.projectilePrefab);

@@ -35,11 +35,11 @@ namespace Balla.Core
         internal static uint activeCount;
 
         public List<ProjectileData> projectileData;
-        public static void AddProjectile(NetProjectile proj)
+        public static void AddProjectile(Projectile.Projectile proj)
         {
             if (syncProjectiles == null)
             {
-                syncProjectiles = new(new SizeCollection<NetProjectile>(1000))
+                syncProjectiles = new(new SizeCollection<Projectile.Projectile>(1000))
                 {
                     [0] = proj
                 };
@@ -58,7 +58,7 @@ namespace Balla.Core
                 }
             }
         }
-        public static List<NetProjectile> syncProjectiles;
+        public static List<Projectile.Projectile> syncProjectiles;
         #endregion
 
         
@@ -109,11 +109,11 @@ namespace Balla.Core
         NativeArray<SpherecastCommand> commands;
         NativeArray<RaycastHit> hits;
 
-        public NetProjectile GetSingleProjectile(ProjectileWeapon w, Vector3 direction)
+        public Projectile.Projectile GetSingleProjectile(ProjectileWeapon w, Vector3 direction)
         {
-            NetProjectile proj = pools[w.dataIndex].GetSingleProjectile();
-            Vector3 pos = fireFromMuzzle ? w.MuzzlePoint : w.holder.firearmShootPoint.position;
-            proj.SimSetup(pos, w.MuzzlePoint, direction, w.holder.entity.entityID);
+            Projectile.Projectile proj = pools[w.dataIndex].GetSingleProjectile();
+            Vector3 pos = w.FirePoint;
+            proj.SimSetup(pos, w.MuzzlePoint, direction, w.Weapon.holder.entity.entityID);
             activeCount++;
             return proj;
         }
@@ -143,7 +143,7 @@ namespace Balla.Core
                 {
                     continue;
                 }
-                NetProjectile p = syncProjectiles[i];
+                Projectile.Projectile p = syncProjectiles[i];
                 entities[index] = BaseEntity.EntityIDs[p.owner];
                 commands[index] = new(p.targetPos, p.data.radius, p.velocity.normalized, qp, p.velocity.magnitude * Delta);
                 index++;
@@ -156,7 +156,7 @@ namespace Balla.Core
             for (int x = 0; x < 1000; x++)
             {
                 //this SHOULD be how we get the current projectile.
-                NetProjectile proj = syncProjectiles[x];
+                Projectile.Projectile proj = syncProjectiles[x];
                 if (proj == null)
                     continue;
                 //The max number of hits we allow.
@@ -213,7 +213,7 @@ namespace Balla.Core
             hits.Dispose();
             commands.Dispose();
         }
-        public void TickProjectile(NetProjectile proj)
+        public void TickProjectile(Projectile.Projectile proj)
         {
             if(proj == null)
             {
@@ -224,12 +224,14 @@ namespace Balla.Core
             proj.currLife += Delta;
 
         }
-        public void ProjectileHit(NetProjectile proj, RaycastHit hit, BaseEntity ent = null)
+        public void ProjectileHit(Projectile.Projectile proj, RaycastHit hit, BaseEntity ent = null)
         {
             Debug.DrawLine(proj.targetPos, hit.point, Color.green, 1);
             if(ent != null)
             {
-                ent.rb.AddForceAtPosition(Mathf.Lerp(proj.data.maxDamage, proj.data.minDamage, proj.data.damageOverLife.Evaluate(proj.LifeLerp)) * proj.direction.normalized, hit.point);
+                float dmg = Mathf.Lerp(proj.data.maxDamage, proj.data.minDamage, proj.data.damageOverLife.Evaluate(proj.LifeLerp)) * Mathf.Lerp(proj.data.minChargeDamageMult, 1, proj.charge);
+                ent.rb.AddForceAtPosition(dmg * proj.direction.normalized, hit.point);
+                ent.ModifyHealth(dmg);
                 if (proj.data.cannotBounceOnEntity)
                 {
                     proj.bounces = -1;
@@ -245,7 +247,7 @@ namespace Balla.Core
             proj.bounces--;
             proj.targetPos = hit.point;
 
-            if (proj.bounces < 0)
+            if (proj.bounces < 0 && proj.data.explosionData != null)
             {
                 ExplosionManager.Instance.RequestExplosion(proj.data.explosionData, hit.point + hit.normal * 0.02f, Quaternion.LookRotation(proj.transform.forward, hit.normal).eulerAngles, proj.owner);
             }
@@ -290,7 +292,7 @@ namespace Balla.Core
                         {
                             if (syncProjectiles[i] == null)
                                 continue;
-                            NetProjectile item = syncProjectiles[i];
+                            Projectile.Projectile item = syncProjectiles[i];
                             int index = synced % 64;
                             chunkIDs[index] = (ushort)item.globalID;
                             chunkPos[index] = item.targetPos;

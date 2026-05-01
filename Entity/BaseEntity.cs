@@ -21,6 +21,8 @@ namespace Balla.Entity
         public static Dictionary<ulong, BaseEntity> EntityIDs;
         [ReadOnly] public float currentHealth;
         [SerializeField] protected float maxHealth;
+        public float HealthLerp => currentHealth / maxHealth;
+
         protected float HealthPercentage => currentHealth / maxHealth;
         public bool Alive => currentHealth > 0;
         [ReadOnly] public bool diedThisFrame;

@@ -5,16 +5,14 @@ using UnityEngine.VFX;
 
 namespace Balla.Projectile
 {
-    public class NetProjectile : BallaScript
+    public class Projectile : BallaScript
     {
 
         internal ulong owner;
         [SerializeField] internal bool alive;
         
         [SerializeField] internal VisualEffect vfx;
-        [SerializeField] internal MeshFilter meshFilter;
-        [SerializeField] internal MeshRenderer meshRenderer;
-
+        internal float charge;
         internal float LifeLerp => Mathf.InverseLerp(0, maxLife, currLife);
         [SerializeField] internal float maxLife, currLife;
         internal Vector3 velocity;
@@ -28,7 +26,7 @@ namespace Balla.Projectile
         internal int globalID = 0, poolID = 0;
         public static int NextGlobalID;
 
-        public static Dictionary<int, NetProjectile> GlobalIDs;
+        public static Dictionary<int, Projectile> GlobalIDs;
 
         protected override void OnEnable()
         {
@@ -48,14 +46,17 @@ namespace Balla.Projectile
         }
         private void Awake()
         {
-            GlobalIDs ??= new Dictionary<int, NetProjectile>();
+            GlobalIDs ??= new Dictionary<int, Projectile>();
 
             if (GlobalIDs.TryAdd(NextGlobalID, this))
             {
                 globalID = NextGlobalID;
                 NextGlobalID++;
             }
-            r.enabled = false;
+            if(r != null)
+            {
+                r.enabled = false;
+            }
         }
         /// <summary>
         /// Prepares the projectile for simulation on the server.
@@ -78,7 +79,10 @@ namespace Balla.Projectile
             transform.position = startPos;
             targetPos = simPos;
             GameCore.Subscribe(this);
-            r.enabled = true;
+            if(r != null)
+            {
+                r.enabled = true;
+            }
             if (vfx != null)
             {
                 vfx.Play();
@@ -94,7 +98,10 @@ namespace Balla.Projectile
             {
                 vfx.Stop();
             }
-            r.enabled = false;
+            if(r != null)
+            {
+                r.enabled = false;
+            }
             Debug.Log("terminated projectile @ " + Time.time);
             GameCore.Unsubscribe(this);
         }
