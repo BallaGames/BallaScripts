@@ -1,5 +1,6 @@
 using Balla.Input;
 using System;
+using Unity.Profiling;
 using UnityEngine;
 namespace Balla.Core
 {
@@ -7,6 +8,10 @@ namespace Balla.Core
 
     public class GameCore : MonoBehaviour
     {
+
+        static readonly ProfilerMarker frameMarker = new("GameCore.OnFrame"), afterFrameMarker = new("GameCore.AfterFrame"), timestepMarker = new("GameCore.Timestep");
+
+
         [RuntimeInitializeOnLoadMethod(loadType: RuntimeInitializeLoadType.SubsystemRegistration)]
         public static void InitialiseAtRuntime()
         {
@@ -57,18 +62,24 @@ namespace Balla.Core
 
         private void Update()
         {
+            frameMarker.Begin();
             frame?.Invoke();
+            frameMarker.End();
         }
         private void FixedUpdate()
         {
+            timestepMarker.Begin();
             Delta = Time.fixedDeltaTime * TimeMultiplier;
             timestep?.Invoke();
             Physics.Simulate(Delta);
             //Physics2D.Simulate(Delta);
+            timestepMarker.End();
         }
         private void LateUpdate()
         {
+            afterFrameMarker.Begin();
             afterFrame?.Invoke();
+            afterFrameMarker.End();
         }
     }
 }

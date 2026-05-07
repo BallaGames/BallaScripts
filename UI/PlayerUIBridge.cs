@@ -18,10 +18,21 @@ namespace Balla
         {
             if (PlayerUI.Instance == null)
                 return;
-            PlayerUI.Instance.SetCrosshair(equipment.CurrentWeapon.CrosshairSize);
-            
-            if(equipment.CurrentWeapon.useCharge || equipment.CurrentWeapon.useHeat)
-                PlayerUI.Instance.UpdateBars(equipment.CurrentWeapon.CurrentCharge, equipment.CurrentWeapon.HeatLevel.lerp, equipment.CurrentWeapon.isOverheated);
+
+
+            if (equipment.CurrentWeapon != null)
+            {
+                PlayerUI.Instance.SetCrosshair(equipment.CurrentWeapon.CrosshairSize);
+
+                //if(equipment.CurrentWeapon.useCharge || equipment.CurrentWeapon.useHeat)
+                //    PlayerUI.Instance.UpdateBars(equipment.CurrentWeapon.CurrentCharge, 
+                //        equipment.CurrentWeapon.HeatLevel.lerp, 
+                //        equipment.CurrentWeapon.isOverheated);
+
+
+                PlayerUI.Instance.UpdateBars(equipment.CurrentWeapon);
+
+            }
 
             PlayerUI.Instance.UpdateHealth(equipment.entity.HealthLerp);
         }

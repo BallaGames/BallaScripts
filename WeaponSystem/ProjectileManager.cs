@@ -145,7 +145,7 @@ namespace Balla.Core
                 }
                 Projectile.Projectile p = syncProjectiles[i];
                 entities[index] = BaseEntity.EntityIDs[p.owner];
-                commands[index] = new(p.targetPos, p.data.radius, p.velocity.normalized, qp, p.velocity.magnitude * Delta);
+                commands[index] = new(p.targetPos - (p.velocity * (p.data.radius * 0.5f)), p.data.radius, p.velocity.normalized, qp, (p.velocity.magnitude + (p.data.radius * 0.5f)) * Delta);
                 index++;
             }
 

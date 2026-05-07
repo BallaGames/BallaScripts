@@ -28,6 +28,7 @@ namespace Balla.Gameplay.Player
         public MovementState moveState;
         [SerializeField, Tooltip("The transform moved when the player crouches")] internal Transform crouchTransform;
 
+        [ReadOnly] public bool sprinting;
         bool _lastCrouch;
         #region Looking
 
@@ -145,7 +146,7 @@ namespace Balla.Gameplay.Player
 
         #region Sliding
         [Header("Sliding")]
-        [SerializeField, ReadOnly] bool sliding;
+        [ReadOnly] public bool sliding;
         public float slideStartForce = 3f;
         public float slideDamp = .5f;
         public float slideMinSpeed = 2f;

@@ -41,27 +41,37 @@ namespace Balla.UI
         public Vector2 crosshairSize;
         Vector2 ch_size;
         public float ch_lerpSpeed;
-        
+        bool lastReloading;
+        public RadialSlider reloadTimeSlider;
 
         public void WeaponSwitched(BaseWeapon newWeapon)
         {
             chargeBarRoot.SetActive(newWeapon.useCharge);
             heatBarRoot.SetActive(newWeapon.useHeat);
         }
-        public void UpdateBars(float charge, float heat, bool isOverheating)
+        public void UpdateBars(BaseWeapon weapon)
         {
-            heatBar.fillAmount = heat;
-            chargeBar.fillAmount = charge;
-            if(lastOverheat != isOverheating)
+            heatBar.fillAmount = weapon.HeatLevel.lerp;
+            chargeBar.fillAmount = weapon.CurrentCharge;
+            if(lastOverheat != weapon.isOverheated)
             {
-                lastOverheat = isOverheating;
-                if(!isOverheating)
+                lastOverheat = weapon.isOverheated;
+                if(!weapon.isOverheated)
                     heatBar.color = defaultColour;
             }
-            if (isOverheating)
+            if (weapon.isOverheated)
             {
                 overheatCycle = Mathf.Repeat(overheatCycle + (Delta * overheatCycleSpeed), 1);
                 heatBar.color = overheatColour.Evaluate(overheatCycle);
+            }
+            if(reloadTimeSlider != null)
+            {
+                if(lastReloading != weapon.IsReloading)
+                {
+                    reloadTimeSlider.Show(weapon.IsReloading);
+                    lastReloading = weapon.IsReloading;
+                }
+                reloadTimeSlider.fillAmount = weapon.ReloadTimeRatio;
             }
         }
         public void UpdateHealth(float lerp)

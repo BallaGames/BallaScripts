@@ -10,9 +10,20 @@ namespace Balla.Equipment
     /// </summary>
     public abstract class BaseWeapon : BaseUseable
     {
+        public bool UseAmmo => useAmmo;
+        [SerializeField] protected bool useAmmo; 
         [SerializeField] protected int maxAmmo;
         [SerializeField, ReadOnly] protected int currentAmmo;
         [SerializeField] protected int ammoPerAttack;
+        [SerializeField] protected float reloadTime;
+        [SerializeField, ReadOnly] protected float currReloadTime;
+        [SerializeField] protected bool cancelReloadOnSwitch = true;
+        [SerializeField, ReadOnly] protected bool isReloading;
+        public bool IsReloading => isReloading;
+        public float AmmoRatio => currentAmmo / maxAmmo;
+        public float ReloadTimeRatio => currReloadTime / reloadTime;
+        public int CurrentAmmo => currentAmmo;
+        public int MaxAmmo => maxAmmo;
 
         public bool UseCharge => useCharge;
         public float CurrentCharge => currentCharge;
@@ -21,6 +32,7 @@ namespace Balla.Equipment
         [SerializeField, ReadOnly] protected float currentCharge;
         [SerializeField] protected float chargeRate, chargeDecay;
         [SerializeField] internal float minCharge, fireRateMultAtMinCharge;
+
 
         public bool UseHeat => useHeat;
         public (float curr, float max, float lerp) HeatLevel => (currentHeat, maxHeat, Mathf.InverseLerp(0, maxHeat, currentHeat));
@@ -32,22 +44,27 @@ namespace Balla.Equipment
         [SerializeField, ReadOnly] internal int heatLevelParamID;
         [SerializeField] internal float maxHeat, heatPerAttack, heatDecay, overheatTime, overheatDecay;
 
+
         [SerializeField] internal bool forceCoolAfterAttack;
         [SerializeField, ReadOnly] internal bool forcedCooling; 
         [SerializeField] internal float forcedCoolTime;
 
+
         public Vector3 idleOffset;
         public Quaternion idleRotation;
+
 
         protected bool attackInput, altAttackInput;
         protected bool s_attackInput;
         protected bool s_altAttackInput;
+
 
         public Action OnWeaponFire, OnForceCooldown, OnOverheat;
         public Action WeaponWindupStarted, WeaponWindupComplete;
         public Action OnReloadStart, OnReloadEnd, OnAmmunitionRestored;
         public Action<float> OnChargeHold;
         public Action<int> OnAmmoChanged;
+
 
         public Vector2 crosshairScaling;
         public virtual Vector2 CrosshairSize
@@ -57,7 +74,10 @@ namespace Balla.Equipment
                 return crosshairScaling;
             }
         }
-        protected virtual bool CanAttack => !forcedCooling && !isOverheated;
+        
+        
+        protected virtual bool CanAttack => !forcedCooling && !isOverheated
+            && (!useAmmo || (currentAmmo > ammoPerAttack && !isReloading));
         protected virtual bool ChargeReady => !useCharge || (isCharged && !isCharging);
 
         /// <summary>
@@ -92,9 +112,37 @@ namespace Balla.Equipment
             InitialiseWeapon(true);
         }
 
+        protected override void Timestep()
+        {
+            if (isReloading)
+            {
+                currReloadTime += Time.fixedDeltaTime;
+                if(currReloadTime >= reloadTime)
+                {
+                    EndReload();
+                }
+            }
+        }
+
+        public virtual void StartReload()
+        {
+            OnReloadStart?.Invoke();
+            isReloading = true;
+            currReloadTime = 0;
+        }
+        public virtual void EndReload()
+        {
+            OnReloadEnd?.Invoke();
+            isReloading = false;
+            currentAmmo = maxAmmo;
+        }
+
         protected virtual void InitialiseWeapon(bool spawned)
         {
-
+            if (UseAmmo)
+            {
+                currentAmmo = maxAmmo;
+            }
         }
         private void OnValidate()
         {

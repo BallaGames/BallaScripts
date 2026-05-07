@@ -43,7 +43,9 @@ namespace Balla.Equipment
         [SerializeField] protected Vector2 spreadScale;
 
         [SerializeField] protected RangedFireModule fireModule;
-        protected override bool CanAttack => base.CanAttack && fireTimer >= timeBetweenRounds && (canAutoFire || !fired) && (!usesBurstFire || burstRoundsFired == 0);
+        protected override bool CanAttack => base.CanAttack && fireTimer >= timeBetweenRounds 
+            && (canAutoFire || !fired) 
+            && (!usesBurstFire || burstRoundsFired == 0);
         float spreadModifier;
         public override Vector2 CrosshairSize
         {
@@ -170,6 +172,8 @@ namespace Balla.Equipment
 
         protected override void Timestep()
         {
+            base.Timestep();
+
             CalculateSpread();
             if(s_attackInput != attackInput || s_altAttackInput != altAttackInput)
             {
@@ -222,6 +226,7 @@ namespace Balla.Equipment
                 }
             }
         }
+
         /// <summary>
         /// This method is where the actual "fire" code is executed. Override this method for a weapon type's behaviour.
         /// </summary>
@@ -241,6 +246,12 @@ namespace Balla.Equipment
         }
         protected virtual void FireSimulation()
         {
+            if (useAmmo)
+            {
+                currentAmmo -= ammoPerAttack;
+            }
+
+
             if (holder != null)
             {
                 holder.ReceiveRecoil();

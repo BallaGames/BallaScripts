@@ -39,6 +39,7 @@ namespace Balla.Equipment
             base.Initialise();
             Input.SubscribeToActionPerform(Input.actions.Player.Next, NextWeapon);
             Input.SubscribeToActionPerform(Input.actions.Player.Previous, PreviousWeapon);
+            Input.SubscribeToActionPerform(Input.actions.Player.Reload, ReloadWeapon);
             weapons ??= new BaseWeapon[4];
             for (int i = 0; i < weapons.Length; i++)
             {
@@ -60,6 +61,16 @@ namespace Balla.Equipment
                 Debug.LogWarning("Could not fully initialise Player Equipment on this object - no Player Controller was found!");
             }
         }
+
+        private void ReloadWeapon()
+        {
+            if (CurrentWeapon.UseAmmo && CurrentWeapon.AmmoRatio != 1 && !CurrentWeapon.IsReloading)
+            {
+                Debug.Log("Started reload");
+                CurrentWeapon.StartReload();
+            }
+        }
+
         void PreviousWeapon()
         {
             SwitchWeapons(false);
@@ -109,6 +120,9 @@ namespace Balla.Equipment
                 {
                     CurrentWeapon.SetAttackInput(Input.Attack);
                     CurrentWeapon.SetAltAttackInput(Input.AltAttack);
+
+                    
+
                 }
             }
         }
