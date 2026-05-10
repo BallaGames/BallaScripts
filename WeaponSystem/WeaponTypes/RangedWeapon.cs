@@ -31,6 +31,7 @@ namespace Balla.Equipment
         public RecoilData recoilData;
 
         [SerializeField, ReadOnly] internal float currentSpread;
+        [SerializeField, ReadOnly] internal float aimSpreadModify; 
         public bool useSpread;
         [Tooltip("If true, the weapon will fire each shot an even step apart from each other Currently only works on one axis.")]
         public bool useEvenSpread;
@@ -41,8 +42,6 @@ namespace Balla.Equipment
         [SerializeField] protected float spreadDecay;
         [SerializeField] protected float spreadPerShot;
         [SerializeField] protected Vector2 spreadScale;
-
-        [SerializeField] protected RangedFireModule fireModule;
         protected override bool CanAttack => base.CanAttack && fireTimer >= timeBetweenRounds 
             && (canAutoFire || !fired) 
             && (!usesBurstFire || burstRoundsFired == 0);
@@ -67,8 +66,10 @@ namespace Balla.Equipment
         }
         private void CalculateSpread()
         {
-            var (crouch, move, air) = holder.SpreadInfluence;
+            var (crouch, move, aim, air) = holder.SpreadInfluence;
+            aimAmount = aim;
             spreadModifier = baseSpread * (air ? airSpreadMult : Mathf.Lerp(1, crouchSpreadMult, crouch) * Mathf.Lerp(1, moveSpreadMult, move));
+            aimSpreadModify = Mathf.Lerp(1, aimSpreadMultiplier, aim);
         }
 
         protected virtual void CycleLogic()
@@ -272,11 +273,12 @@ namespace Balla.Equipment
                     Vector3 dir = Vector3.forward;
                     if (useEvenSpread)
                     {
-                        spreadAngle.y = ((Mathf.InverseLerp(0, shotsPerAttack-1, i) * 2) - 1) * evenSpreadAmount;
+                        spreadAngle.y = ((Mathf.InverseLerp(0, shotsPerAttack-1, i) * 2) - 1) * evenSpreadAmount * (aimAffectsEvenSpread ? Mathf.Lerp(1, aimSpreadMultiplier, aimAmount) : 1);
+
                     }
                     else
                     {
-                        spreadAngle = (baseSpread + (currentSpread * maxSpreadAngle)) * spreadModifier * (UnityEngine.Random.insideUnitCircle * spreadScale);
+                        spreadAngle = (baseSpread + ((currentSpread * maxSpreadAngle)) * spreadModifier * aimSpreadModify) * (UnityEngine.Random.insideUnitCircle * spreadScale);
                     }
                     dir = Quaternion.Euler(spreadAngle.x, spreadAngle.y, 0) * dir;
                     Fire(Vector3.zero, holder.firearmShootPoint.rotation * dir);

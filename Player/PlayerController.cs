@@ -1,6 +1,7 @@
 using UnityEngine;
 using Balla.Core;
 using System.Collections;
+using Balla.Equipment;
 namespace Balla.Gameplay.Player
 {
 
@@ -18,7 +19,8 @@ namespace Balla.Gameplay.Player
     {
         [SerializeField] internal Rigidbody rb;
         [SerializeField] internal CapsuleCollider capsule;
-
+        [SerializeField] internal PlayerEquipment equipment;
+        
 
 
         [SerializeField, ReadOnly, Tooltip("Obtained from Camera.Main if this player is the local authority.")] internal Camera cam;
@@ -100,6 +102,8 @@ namespace Balla.Gameplay.Player
         /// How crouched the player is. This value moves between 0 and 1 when the player is crouching or uncrouching.
         /// </summary>
         [SerializeField, ReadOnly] internal float currentCrouch;
+
+        [SerializeField, Tooltip("How much faster/slower the player moves while crouched")] protected float aimMoveForceMult;
 
         [SerializeField, Tooltip("How much faster/slower the player moves while crouched")] protected float crouchMoveForceMult;
         /// <summary>
@@ -450,7 +454,7 @@ namespace Balla.Gameplay.Player
                         moveState = MovementState.Crouch;
                         return;
                     }
-                    if (Input.Sprint && Input.Move.y >= 0.7f)
+                    if (equipment.Aim <= 0.5f && Input.Sprint && Input.Move.y >= 0.7f)
                     {
                         moveState = MovementState.Sprint;
                         return;
@@ -766,6 +770,12 @@ namespace Balla.Gameplay.Player
                     default:
                         break;
                 }
+
+                if(!equipment.isUnarmed && equipment.Aim >= 0.5f && equipment.CurrentWeapon != null && equipment.CurrentWeapon.hasAim)
+                {
+                    forceMult *= aimMoveForceMult;
+                }
+
                 if (Input.Move != Vector2.zero)
                 {
                     //Integrate walk/crouch/sprint later

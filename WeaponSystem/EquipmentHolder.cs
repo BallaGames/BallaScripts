@@ -20,7 +20,7 @@ namespace Balla.Equipment
         /// <summary>
         /// Override this on all children to get the amount by which spread should be influenced.
         /// </summary>
-        public virtual (float crouch, float move, bool air) SpreadInfluence => (0, 0, false);
+        public virtual (float crouch, float move, float aim, bool air) SpreadInfluence => (0, 0, 0, false);
         private void Start()
         {
             if (!TryGetComponent(out entity))

@@ -24,7 +24,9 @@ namespace Balla
         public AnimationCurve camRotIntensity = AnimationCurve.Linear(0, 1, 1, 0);
         public Vector3 maxCamPos, maxCamRot;
         public Vector3 maxCamPosAdd, minCamPosAdd, maxCamRotAdd, minCamRotAdd;
-        
+
+        public Vector3 aimRecoilPosMult, aimRecoilRotMult;
+
         public float camPosSharp, camRotSharp, camPosDecay, camRotDecay, camRecoilAdd, camRecoilDecay;
     }
 }

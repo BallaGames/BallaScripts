@@ -67,6 +67,23 @@ namespace Balla.Equipment
 
 
         public Vector2 crosshairScaling;
+
+        [SerializeField] internal bool hasAim = false;
+        [SerializeField] internal float aimSpeed = 5;
+        /// <summary>
+        /// We could, in theory, make this more than 0. Just for funnies.
+        /// </summary>
+        [SerializeField] internal float aimSpreadMultiplier = 0.1f;
+        [SerializeField] internal bool aimAffectsEvenSpread;
+        [SerializeField] protected RangedFireModule fireModule;
+
+        [SerializeField, ReadOnly] internal float aimAmount = 0;
+        [SerializeField] internal AnimationCurve aimCurve;
+        [SerializeField] internal float aimViewFOV = 55;
+        [SerializeField] internal float aimWorldFOV = 70;
+        [SerializeField] internal Vector3 aimPosition;
+
+
         public virtual Vector2 CrosshairSize
         {
             get
@@ -77,7 +94,7 @@ namespace Balla.Equipment
         
         
         protected virtual bool CanAttack => !forcedCooling && !isOverheated
-            && (!useAmmo || (currentAmmo > ammoPerAttack && !isReloading));
+            && (!useAmmo || (currentAmmo >= ammoPerAttack && !isReloading));
         protected virtual bool ChargeReady => !useCharge || (isCharged && !isCharging);
 
         /// <summary>

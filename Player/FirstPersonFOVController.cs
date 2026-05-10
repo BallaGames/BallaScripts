@@ -1,4 +1,5 @@
 using Balla.Core;
+using Balla.Equipment;
 using Balla.Gameplay.Player;
 using System.Globalization;
 using UnityEngine;
@@ -9,13 +10,14 @@ namespace Balla
     public class FirstPersonFOVController : BallaScript
     {
         protected PlayerController controller;
-
-        protected float currFOV;
-        protected float addFOV;
+        protected PlayerEquipment equipment;
+        [SerializeField, ReadOnly] protected float currFOV;
+        [SerializeField, ReadOnly] protected float addFOV;
         /// <summary>
         /// Pulled from the player's settings.
         /// </summary>
         [SerializeField] protected float baseFOV;
+        [SerializeField, ReadOnly] protected float targetViewFOV, targetWorldFOV;
         [SerializeField] protected float sprintFOVAdd = 5;
         [SerializeField] protected float slideFOVAdd = 10;
         [SerializeField] protected float aimFOVAdd = -20;
@@ -23,6 +25,9 @@ namespace Balla
 
         float currViewFOV;
         float addViewFOV;
+
+        float fovZoomTime;
+        float worldFovVelocity, viewFovVelocity;
         [SerializeField] protected float baseViewmodelFOV = 60;
         [SerializeField] protected float viewmodelAimFOVAdd = -10;
 
@@ -41,14 +46,6 @@ namespace Balla
         {
             if(Input != null)
             {
-
-            if (Input.AltAttack)
-            {
-                addFOV = aimFOVAdd;
-            }
-            else
-            {
-
                 switch (controller.moveState)
                 {
                     case MovementState.Crouch:
@@ -73,11 +70,26 @@ namespace Balla
                         addFOV = 0;
                         break;
                 }
-            }
-                addViewFOV = Input.AltAttack ? viewmodelAimFOVAdd : 0;
-                currFOV = Mathf.Lerp(currFOV, baseFOV + addFOV, fovLerpSpeed * Time.deltaTime);
+
+                if (equipment.CurrentWeapon != null)
+                {
+                    targetViewFOV = equipment.CurrentWeapon.aimViewFOV;
+                    targetWorldFOV = equipment.CurrentWeapon.aimWorldFOV;
+                }
+                else
+                {
+                    targetWorldFOV = 0;
+                    targetViewFOV = 0;
+                }
+
+                if (equipment.isUnarmed)
+                {
+                    addViewFOV = Input.AltAttack ? viewmodelAimFOVAdd : 0;
+                }
+
+                currFOV = Mathf.Lerp(currFOV, Mathf.Lerp(baseFOV + addFOV, targetWorldFOV, equipment.Aim), Time.deltaTime * fovLerpSpeed);
+                currViewFOV = Mathf.Lerp(currViewFOV, Mathf.Lerp(baseViewmodelFOV + addViewFOV, targetViewFOV, equipment.Aim), Time.deltaTime * fovLerpSpeed);
                 controller.cam.fieldOfView = currFOV;
-                currViewFOV = Mathf.Lerp(currViewFOV, baseViewmodelFOV + addViewFOV, Time.deltaTime * fovLerpSpeed);
             }
             else
             {
@@ -97,6 +109,11 @@ namespace Balla
         {
             if (controller == null)
                 controller = GetComponent<PlayerController>();
+            if (equipment == null)
+                equipment = GetComponent<PlayerEquipment>();
+
+            fovZoomTime = 1 / fovLerpSpeed;
+
         }
     }
 }

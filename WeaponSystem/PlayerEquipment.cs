@@ -23,14 +23,23 @@ namespace Balla.Equipment
         public Action<BaseWeapon, BaseWeapon> weaponSwitched;
         public bool isUnarmed;
 
-        public override (float crouch, float move, bool air) SpreadInfluence
+
+        //Aim stuff
+        [SerializeField] protected float aimAmount;
+        /// <summary>
+        /// a 0-1 value that tells the player how zoomed in they are when aiming
+        /// </summary>
+        public float Aim => aimAmount;
+
+
+        public override (float crouch, float move, float aim, bool air) SpreadInfluence
         {
             get
             {
                 //If we have no weapon, return 0, 0
                 if (CurrentWeapon == null || pc == null)
                     return base.SpreadInfluence;
-                return (pc.currentCrouch, Input.Move.magnitude, !pc.isGrounded || pc.moveState == MovementState.Slide);
+                return (pc.currentCrouch, Input.Move.magnitude, Aim, !pc.isGrounded || pc.moveState == MovementState.Slide);
             }
         }
 
@@ -121,19 +130,30 @@ namespace Balla.Equipment
                     CurrentWeapon.SetAttackInput(Input.Attack);
                     CurrentWeapon.SetAltAttackInput(Input.AltAttack);
 
-                    
+                    if (CurrentWeapon.hasAim)
+                    {
+                        aimAmount = Mathf.MoveTowards(aimAmount, Input.AltAttack ? 1 : 0, CurrentWeapon.aimSpeed * Time.fixedDeltaTime);
+                        CurrentWeapon.aimAmount = aimAmount;
+                    }
+                    else
+                    {
+                        aimAmount = 0;
+                    }
 
                 }
             }
         }
         public override void ReceiveRecoil()
         {
+            Vector3 posMult = Vector3.Lerp(Vector3.one, recoilData.aimRecoilPosMult, Aim);
+            Vector3 rotMult = Vector3.Lerp(Vector3.one, recoilData.aimRecoilRotMult, Aim);
+
             recoilIntensity += recoilData.intensityClimb;
             camIntensity += recoilData.camRecoilAdd;
-            linRecoilTarg += MathUtils.Vec3Random(recoilData.linearForceMin, recoilData.linearForceMax) * recoilData.linearIntensity.Evaluate(recoilIntensity);
-            angRecoilTarg += MathUtils.Vec3Random(recoilData.angularForceMin, recoilData.angularForceMax) * recoilData.angularIntensity.Evaluate(recoilIntensity);
-            camPosTarg += MathUtils.Vec3Random(recoilData.minCamPosAdd, recoilData.maxCamPosAdd) * recoilData.camPosIntensity.Evaluate(camIntensity);
-            camRotTarg += MathUtils.Vec3Random(recoilData.minCamRotAdd, recoilData.maxCamRotAdd) * recoilData.camRotIntensity.Evaluate(camIntensity);
+            linRecoilTarg += MathUtils.Vec3Random(recoilData.linearForceMin, recoilData.linearForceMax).ScaleComponent(posMult) * recoilData.linearIntensity.Evaluate(recoilIntensity);
+            angRecoilTarg += MathUtils.Vec3Random(recoilData.angularForceMin, recoilData.angularForceMax).ScaleComponent(rotMult) * recoilData.angularIntensity.Evaluate(recoilIntensity);
+            camPosTarg += MathUtils.Vec3Random(recoilData.minCamPosAdd, recoilData.maxCamPosAdd).ScaleComponent(posMult) * recoilData.camPosIntensity.Evaluate(camIntensity);
+            camRotTarg += MathUtils.Vec3Random(recoilData.minCamRotAdd, recoilData.maxCamRotAdd).ScaleComponent(rotMult) * recoilData.camRotIntensity.Evaluate(camIntensity);
 
             linRecoilMax = linRecoilTarg;
             angRecoilMax = angRecoilTarg;
@@ -215,7 +235,7 @@ namespace Balla.Equipment
                 {
                     addRot = Vector3.zero;
                 }
-                    recoilTransform.SetLocalPositionAndRotation(linearRecoilCurr + CurrentWeapon.idleOffset + addPos, Quaternion.Euler(angularRecoilCurr + addRot) * CurrentWeapon.idleRotation);
+                    recoilTransform.SetLocalPositionAndRotation(linearRecoilCurr + Vector3.Lerp(CurrentWeapon.idleOffset, CurrentWeapon.aimPosition, CurrentWeapon.aimCurve.Evaluate(aimAmount)) + addPos, Quaternion.Euler(angularRecoilCurr + addRot) * CurrentWeapon.idleRotation);
             }
 
         }
