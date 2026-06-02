@@ -2,13 +2,14 @@ using Balla.Core;
 using Balla.Gameplay.Player;
 using Balla.UI;
 using System;
+using System.Transactions;
 using UnityEngine;
 
 namespace Balla.Equipment
 {
     public class PlayerEquipment : EquipmentHolder
     {
-        public BaseWeapon CurrentWeapon => weapons[weaponIndex];
+        public BaseWeapon CurrentWeapon => weapons.Length == 0 ? null : weapons[weaponIndex];
         public int weaponIndex;
         public BaseWeapon[] weapons;
         public PlayerController pc;
@@ -30,6 +31,9 @@ namespace Balla.Equipment
         /// a 0-1 value that tells the player how zoomed in they are when aiming
         /// </summary>
         public float Aim => aimAmount;
+        public Action OnReceivedFire;
+
+        public Action OnFireStart, OnFireEnd, OnReloadStart, OnReloadEnd;
 
 
         public override (float crouch, float move, float aim, bool air) SpreadInfluence
@@ -73,11 +77,21 @@ namespace Balla.Equipment
 
         private void ReloadWeapon()
         {
-            if (CurrentWeapon.UseAmmo && CurrentWeapon.AmmoRatio != 1 && !CurrentWeapon.IsReloading)
+            if (CurrentWeapon != null && CurrentWeapon.UseAmmo && CurrentWeapon.AmmoRatio != 1 && !CurrentWeapon.IsReloading)
             {
                 Debug.Log("Started reload");
                 CurrentWeapon.StartReload();
+                OnReloadStart?.Invoke();
             }
+        }
+
+        void OnWeaponFireStart()
+        {
+            OnFireStart?.Invoke();
+        }
+        void OnWeaponFireEnd()
+        {
+            OnFireEnd?.Invoke();
         }
 
         void PreviousWeapon()
@@ -104,17 +118,43 @@ namespace Balla.Equipment
             {
                 weaponIndex += weapons.Length;
             }
-            //Then call our select and deselect methods.
-            oldWeapon.OnDeselect(CurrentWeapon);
-            CurrentWeapon.OnSelect(oldWeapon);
-            oldWeapon.OnUnequip();
-            CurrentWeapon.OnEquip();
-            PlayerUI.Instance.WeaponSwitched(CurrentWeapon);
-            if(CurrentWeapon is RangedWeapon rw)
+                //Then call our select and deselect methods.
+            if(CurrentWeapon != null)
             {
-                recoilData = rw.recoilData;
+                if(oldWeapon != null)
+                {
+                    oldWeapon.OnDeselect(CurrentWeapon);
+                    oldWeapon.OnFireStart -= OnFireStart;
+                    oldWeapon.OnFireEnd -= OnFireEnd;
+                    oldWeapon.OnReloadEnd -= OnReloadEnd;
+                    oldWeapon.OnReloadStart -= OnReloadStart;
+                    CurrentWeapon.OnSelect(oldWeapon);
+                    oldWeapon.OnUnequip();
+                }
+                CurrentWeapon.OnEquip();
+                CurrentWeapon.OnFireStart += OnFireStart;
+                CurrentWeapon.OnFireEnd += OnFireEnd;
+                CurrentWeapon.OnReloadStart += OnReloadStart;
+                CurrentWeapon.OnReloadEnd += OnReloadEnd;
+                
+                PlayerUI.Instance.WeaponSwitched(CurrentWeapon);
+                
+                if(CurrentWeapon is RangedWeapon rw)
+                {
+                    recoilData = rw.recoilData;
+                }
+                weaponSwitched?.Invoke(oldWeapon, CurrentWeapon);
             }
-            weaponSwitched?.Invoke(oldWeapon, CurrentWeapon);
+            else
+            {
+                //If we have no valid weapon to switch to, then we will attempt to revert the weapon switch
+                weaponIndex += next ? -1 : 1;
+                weaponIndex %= weapons.Length;
+                if(weaponIndex < 0)
+                {
+                    weaponIndex += weapons.Length;
+                }
+            }
         }
         protected override void OnFrame()
         {
@@ -145,21 +185,24 @@ namespace Balla.Equipment
         }
         public override void ReceiveRecoil()
         {
-            Vector3 posMult = Vector3.Lerp(Vector3.one, recoilData.aimRecoilPosMult, Aim);
-            Vector3 rotMult = Vector3.Lerp(Vector3.one, recoilData.aimRecoilRotMult, Aim);
-
             recoilIntensity += recoilData.intensityClimb;
             camIntensity += recoilData.camRecoilAdd;
-            linRecoilTarg += MathUtils.Vec3Random(recoilData.linearForceMin, recoilData.linearForceMax).ScaleComponent(posMult) * recoilData.linearIntensity.Evaluate(recoilIntensity);
-            angRecoilTarg += MathUtils.Vec3Random(recoilData.angularForceMin, recoilData.angularForceMax).ScaleComponent(rotMult) * recoilData.angularIntensity.Evaluate(recoilIntensity);
-            camPosTarg += MathUtils.Vec3Random(recoilData.minCamPosAdd, recoilData.maxCamPosAdd).ScaleComponent(posMult) * recoilData.camPosIntensity.Evaluate(camIntensity);
-            camRotTarg += MathUtils.Vec3Random(recoilData.minCamRotAdd, recoilData.maxCamRotAdd).ScaleComponent(rotMult) * recoilData.camRotIntensity.Evaluate(camIntensity);
+            linRecoilTarg += MathUtils.Vec3Random(recoilData.linearForceMin, recoilData.linearForceMax).ScaleComponent(Vector3.Lerp(Vector3.one, recoilData.aimRecoilPosMult, Aim))
+                * recoilData.linearIntensity.Evaluate(recoilIntensity);
+            angRecoilTarg += MathUtils.Vec3Random(recoilData.angularForceMin, recoilData.angularForceMax).ScaleComponent(Vector3.Lerp(Vector3.one, recoilData.aimRecoilRotMult, Aim)) 
+                * recoilData.angularIntensity.Evaluate(recoilIntensity);
+            camPosTarg += MathUtils.Vec3Random(recoilData.minCamPosAdd, recoilData.maxCamPosAdd).ScaleComponent(Vector3.Lerp(Vector3.one, recoilData.aimRecoilPosMultCam, Aim))
+                * recoilData.camPosIntensity.Evaluate(camIntensity);
+            camRotTarg += MathUtils.Vec3Random(recoilData.minCamRotAdd, recoilData.maxCamRotAdd).ScaleComponent(Vector3.Lerp(Vector3.one, recoilData.aimRecoilRotMultCam, Aim)) 
+                * recoilData.camRotIntensity.Evaluate(camIntensity);
 
             linRecoilMax = linRecoilTarg;
             angRecoilMax = angRecoilTarg;
 
             recoilWaitTime = 0;
             recoilReturnTime = 0;
+
+            OnReceivedFire?.Invoke();
 
         }
         protected override void CalculateRecoil()

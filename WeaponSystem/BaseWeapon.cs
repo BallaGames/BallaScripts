@@ -10,6 +10,10 @@ namespace Balla.Equipment
     /// </summary>
     public abstract class BaseWeapon : BaseUseable
     {
+        public Animator animator;
+
+
+
         public bool UseAmmo => useAmmo;
         [SerializeField] protected bool useAmmo; 
         [SerializeField] protected int maxAmmo;
@@ -59,7 +63,7 @@ namespace Balla.Equipment
         protected bool s_altAttackInput;
 
 
-        public Action OnWeaponFire, OnForceCooldown, OnOverheat;
+        public Action OnWeaponFire, OnForceCooldown, OnOverheat, OnFireStart, OnFireEnd;
         public Action WeaponWindupStarted, WeaponWindupComplete;
         public Action OnReloadStart, OnReloadEnd, OnAmmunitionRestored;
         public Action<float> OnChargeHold;
@@ -101,9 +105,9 @@ namespace Balla.Equipment
         /// Used to find out which trigger should be used for the attack animation.
         /// </summary>
         /// <param name="triggerName"></param>
-        protected virtual void GetAttackAnimation(out string triggerName)
+        public virtual string GetAttackAnimation()
         {
-            triggerName = "null";
+            return "null";
         }
 
         public override void OnSelect(BaseUseable previous)

@@ -8,6 +8,10 @@ namespace Balla.Equipment
     public class RangedWeapon : BaseWeapon
     {
 
+        public ParticleSystem casingEjectSystem;
+
+        public Action OnFired;
+
         [SerializeField] protected Transform muzzle;
         [SerializeField, Tooltip("How many times this firearm will fire per minute")] protected int roundsPerMinute;
         [SerializeField, ReadOnly, Tooltip("The time between rounds, exposed to help developers.")] protected float timeBetweenRounds;
@@ -70,6 +74,11 @@ namespace Balla.Equipment
             aimAmount = aim;
             spreadModifier = baseSpread * (air ? airSpreadMult : Mathf.Lerp(1, crouchSpreadMult, crouch) * Mathf.Lerp(1, moveSpreadMult, move));
             aimSpreadModify = Mathf.Lerp(1, aimSpreadMultiplier, aim);
+        }
+
+        public override string GetAttackAnimation()
+        {
+            return "Fire";
         }
 
         protected virtual void CycleLogic()
@@ -188,10 +197,12 @@ namespace Balla.Equipment
                     if (s_attackInput && CanAttack)
                     {
                         muzzleEffect.Play();
+                        OnFireStart?.Invoke();
                     }
                     else
                     {
                         muzzleEffect.Stop();
+                        OnFireEnd?.Invoke();
                     }
                     playingMuzzle = s_attackInput;
                 }
@@ -250,6 +261,8 @@ namespace Balla.Equipment
             if (useAmmo)
             {
                 currentAmmo -= ammoPerAttack;
+                if (casingEjectSystem != null)
+                    casingEjectSystem.Play();
             }
 
 
@@ -316,6 +329,7 @@ namespace Balla.Equipment
                 s_attackInput = false;
                 fired = false;
             }
+            OnFired?.Invoke();
         }
         protected override IEnumerator ForceCharge()
         {

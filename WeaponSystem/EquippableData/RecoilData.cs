@@ -26,6 +26,8 @@ namespace Balla
         public Vector3 maxCamPosAdd, minCamPosAdd, maxCamRotAdd, minCamRotAdd;
 
         public Vector3 aimRecoilPosMult, aimRecoilRotMult;
+        public Vector3 aimRecoilPosMultCam, aimRecoilRotMultCam;
+
 
         public float camPosSharp, camRotSharp, camPosDecay, camRotDecay, camRecoilAdd, camRecoilDecay;
     }
