@@ -11,15 +11,6 @@ namespace Balla
         public AnimationCurve linearReturnCurve, angularReturnCurve, linearIntensity, angularIntensity;
         public float intensityClimb, intensityDecay, intensityDecayMult;
 
-        public bool addPosition;
-        public AnimationCurve addXPos = AnimationCurve.Constant(0, 1, 1), 
-            addYPos = AnimationCurve.Constant(0, 1, 1), 
-            addZPos = AnimationCurve.Constant(0, 1, 1);
-        public bool addRotation;
-        public AnimationCurve addXRot = AnimationCurve.Constant(0, 1, 1),
-            addYRot = AnimationCurve.Constant(0, 1, 1),
-            addZRot = AnimationCurve.Constant(0, 1, 1);
-
         public AnimationCurve camPosIntensity = AnimationCurve.Linear(0, 1, 1, 0);
         public AnimationCurve camRotIntensity = AnimationCurve.Linear(0, 1, 1, 0);
         public Vector3 maxCamPos, maxCamRot;
@@ -28,6 +19,9 @@ namespace Balla
         public Vector3 aimRecoilPosMult, aimRecoilRotMult;
         public Vector3 aimRecoilPosMultCam, aimRecoilRotMultCam;
 
+        public Quaternion aimRotation = Quaternion.identity;
+        public Vector3 aimPositionNegate = Vector3.zero;
+        public float aimRotationNegate = 1;
 
         public float camPosSharp, camRotSharp, camPosDecay, camRotDecay, camRecoilAdd, camRecoilDecay;
     }

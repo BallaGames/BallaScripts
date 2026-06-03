@@ -14,6 +14,14 @@ namespace Balla.Equipment
         public BaseWeapon[] weapons;
         public PlayerController pc;
 
+
+        protected Vector3 motionAddPos, motionAddPosTarget, motionAddRot, motionAddRotTarget;
+        protected float lookMotionX, lookMotionY;
+        protected float swayAngleX, swayAngleY;
+        protected Vector3 swayTargetPos, swayTargetRot, swayFinalPos, swayFinalRot;
+
+        public SwayConfig swayConfig;
+
         public BaseUseable ability;
         public RecoilData recoilData;
         Vector3 addPos, addRot;
@@ -158,7 +166,7 @@ namespace Balla.Equipment
         }
         protected override void OnFrame()
         {
-            CalculateRecoil();
+            CalculateWeaponMotion();
         }
         protected override void Timestep()
         {
@@ -205,7 +213,7 @@ namespace Balla.Equipment
             OnReceivedFire?.Invoke();
 
         }
-        protected override void CalculateRecoil()
+        protected override void CalculateWeaponMotion()
         {
             if(recoilData == null)
             {
@@ -251,36 +259,55 @@ namespace Balla.Equipment
                     
                     camRecoilTarget.SetLocalPositionAndRotation(camPos.ScaleComponent(camPosScale), Quaternion.Euler(camRot.ScaleComponent(camRotScale)));
                 }
-                
-                if (recoilData.addPosition)
-                {
-                    addPos = new Vector3()
-                    {
-                        x = recoilData.addXPos.Evaluate(recoilReturnTime),
-                        y = recoilData.addYPos.Evaluate(recoilReturnTime),
-                        z = recoilData.addZPos.Evaluate(recoilReturnTime),
-                    };
-                }
-                else
-                {
-                    addPos = Vector3.zero;
-                }
-                if (recoilData.addRotation)
-                {
-                    addRot = new Vector3()
-                    {
-                        x = recoilData.addXRot.Evaluate(recoilReturnTime),
-                        y = recoilData.addYRot.Evaluate(recoilReturnTime),
-                        z = recoilData.addZRot.Evaluate(recoilReturnTime),
-                    };
-                }
-                else
-                {
-                    addRot = Vector3.zero;
-                }
-                    recoilTransform.SetLocalPositionAndRotation(linearRecoilCurr + Vector3.Lerp(CurrentWeapon.idleOffset, CurrentWeapon.aimPosition, CurrentWeapon.aimCurve.Evaluate(aimAmount)) + addPos, Quaternion.Euler(angularRecoilCurr + addRot) * CurrentWeapon.idleRotation);
-            }
 
+                //Now we need to do some extra maths for weapon motion. May change in future.
+
+                WeaponMotionCalc();
+
+                addPos = swayFinalPos + motionAddPos;
+                addRot = swayFinalRot + motionAddRot;
+
+                    recoilTransform.SetLocalPositionAndRotation
+                    (linearRecoilCurr + Vector3.Lerp(CurrentWeapon.idleOffset, CurrentWeapon.aimPosition, CurrentWeapon.aimCurve.Evaluate(aimAmount)) + addPos 
+                    + (recoilTransform.parent.localPosition.ScaleComponent(recoilData.aimPositionNegate) * aimAmount), 
+                        Quaternion.Euler(angularRecoilCurr + addRot) * 
+                        Quaternion.Lerp(CurrentWeapon.idleRotation, 
+                        Quaternion.Lerp(Quaternion.identity, Quaternion.Inverse(recoilTransform.parent.localRotation) * recoilData.aimRotation, recoilData.aimRotationNegate), 
+                        Aim));
+            }
+        }
+        void WeaponMotionCalc()
+        {
+            //Get the look motion info
+            lookMotionX = pc.lookDelta.x;
+            lookMotionY = pc.lookDelta.y;
+
+            if (pc.moveState == MovementState.Walk || pc.moveState == MovementState.None)
+            {
+                 swayAngleY += Time.deltaTime * swayConfig.swaySpeed.y * Mathf.Lerp(1, swayConfig.swayMoveSpeedMult, Input.Move.sqrMagnitude);
+                swayAngleX += Time.deltaTime * swayConfig.swaySpeed.x * Mathf.Lerp(1, swayConfig.swayMoveSpeedMult, Input.Move.sqrMagnitude);
+            }
+            swayTargetPos = new Vector3(Mathf.Sin(swayAngleX), 0, Mathf.Cos(swayAngleY));
+            swayTargetRot = new Vector3(Mathf.Sin(swayAngleY), 0, Mathf.Cos(swayAngleX));
+
+            swayFinalPos = Vector3.Lerp(swayFinalPos, swayTargetPos.ScaleComponent(Vector3.Lerp(swayConfig.swayPosScale, swayConfig.swayMovePosScale, Input.Move.sqrMagnitude)) * Mathf.Lerp(1, swayConfig.aimSwayMult, Aim), (1 / swayConfig.swayDamping) * Time.deltaTime);
+            swayFinalRot = Vector3.Lerp(swayFinalRot, swayTargetRot.ScaleComponent(Vector3.Lerp(swayConfig.swayRotScale, swayConfig.swayMoveRotScale, Input.Move.sqrMagnitude)) * Mathf.Lerp(1, swayConfig.aimSwayMult, Aim), (1 / swayConfig.swayDamping) * Time.deltaTime);
+
+            motionAddPosTarget = new Vector3
+            {
+                x = (Input.Move.x * swayConfig.movementPosScale.x) + (lookMotionX * swayConfig.lookMotionPosScale.x),
+                y = Input.Move.y * swayConfig.movementPosScale.y, 
+                z = (Input.Move.y * swayConfig.movementPosScale.z) + (lookMotionY * swayConfig.lookMotionPosScale.y),
+            };
+            motionAddRotTarget = new Vector3
+            {
+                x = (Input.Move.y * swayConfig.movementRotScale.x) + (lookMotionY * swayConfig.lookMotionRotScale.x),
+                y = (Input.Move.x * swayConfig.movementRotScale.y) + (lookMotionX * swayConfig.lookMotionRotScale.y),
+                z = (Input.Move.x * swayConfig.movementRotScale.z) + (lookMotionX * swayConfig.lookMotionRotScale.z),
+            };
+
+            motionAddPos = Vector3.Lerp(motionAddPos, motionAddPosTarget * Mathf.Lerp(1, swayConfig.aimMotionMult, Aim), (1 / swayConfig.motionPosDamping) * Time.deltaTime);
+            motionAddRot = Vector3.Lerp(motionAddRot, motionAddRotTarget * Mathf.Lerp(1, swayConfig.aimMotionMult, Aim), (1 / swayConfig.motionRotDamping) * Time.deltaTime);
         }
     }
 }

@@ -38,6 +38,7 @@ namespace Balla.UI
         }
 
         public RectTransform crosshairTransform;
+        public CanvasGroup crossshairCG;
         public Vector2 crosshairSize;
         Vector2 ch_size;
         public float ch_lerpSpeed;
@@ -78,9 +79,10 @@ namespace Balla.UI
         {
             healthSlider.value = lerp;
         }
-        public void SetCrosshair(Vector2 size)
+        public void SetCrosshair(Vector2 size, float aim)
         {
             ch_size = Vector2.Lerp(ch_size, size, ch_lerpSpeed * Time.deltaTime);
+            crossshairCG.alpha = aim;
             crosshairTransform.sizeDelta = ch_size;
         }
     }

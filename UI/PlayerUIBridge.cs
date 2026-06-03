@@ -22,7 +22,7 @@ namespace Balla
 
             if (equipment.CurrentWeapon != null)
             {
-                PlayerUI.Instance.SetCrosshair(equipment.CurrentWeapon.CrosshairSize);
+                PlayerUI.Instance.SetCrosshair(equipment.CurrentWeapon.CrosshairSize, 1-equipment.Aim);
 
                 //if(equipment.CurrentWeapon.useCharge || equipment.CurrentWeapon.useHeat)
                 //    PlayerUI.Instance.UpdateBars(equipment.CurrentWeapon.CurrentCharge, 

@@ -42,7 +42,7 @@ namespace Balla.Equipment
         {
 
         }
-        protected virtual void CalculateRecoil()
+        protected virtual void CalculateWeaponMotion()
         {
 
         }
